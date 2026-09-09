@@ -1,0 +1,296 @@
+<UserControl x:Class="PharmaERP.Desktop.Views.SalesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+             xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:SalesViewModel}">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="24,18">
+        <Grid.RowDefinitions>
+            <!-- Top Filter Bar -->
+            <RowDefinition Height="Auto" />
+            <!-- Main Content Area: Left Grid (Invoices), Right Details Pane -->
+            <RowDefinition Height="*" />
+            <!-- Bottom Status Bar -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. TOP FILTER BAR -->
+        <Border Grid.Row="0"
+                Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="16,12"
+                Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Top Row: Title & Action Buttons -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Sales Invoices &amp; History"
+                               Style="{StaticResource Text.Display}"
+                               FontSize="20"
+                               VerticalAlignment="Center" />
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource Button.Primary}"
+                                Content="Reprint Invoice"
+                                Command="{Binding ReprintCommand}"
+                                Padding="14,6"
+                                Margin="0,0,8,0" />
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="Cancel Sale"
+                                Foreground="Crimson"
+                                Command="{Binding CancelInvoiceCommand}"
+                                Padding="14,6"
+                                Margin="0,0,8,0" />
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="Refresh"
+                                Command="{Binding SearchCommand}"
+                                Padding="14,6" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Filter Controls -->
+                <WrapPanel Grid.Row="1" VerticalAlignment="Center">
+                    <!-- Quick Date Presets -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,16,6">
+                        <Button Content="Today" Style="{StaticResource Button.Outline}" Command="{Binding FilterTodayCommand}" Padding="8,4" Margin="0,0,4,0" FontSize="11" />
+                        <Button Content="Yesterday" Style="{StaticResource Button.Outline}" Command="{Binding FilterYesterdayCommand}" Padding="8,4" Margin="0,0,4,0" FontSize="11" />
+                        <Button Content="Last 7 Days" Style="{StaticResource Button.Outline}" Command="{Binding FilterLast7DaysCommand}" Padding="8,4" Margin="0,0,4,0" FontSize="11" />
+                        <Button Content="All Time" Style="{StaticResource Button.Outline}" Command="{Binding FilterAllTimeCommand}" Padding="8,4" FontSize="11" />
+                    </StackPanel>
+
+                    <!-- Search Box -->
+                    <TextBox Width="220"
+                             Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             Padding="8,5"
+                             Margin="0,0,12,6"
+                             VerticalContentAlignment="Center"
+                             Tag="Search Invoice #, Customer..." />
+
+                    <Button Style="{StaticResource Button.Primary}"
+                            Content="Search"
+                            Command="{Binding SearchCommand}"
+                            Padding="12,5"
+                            Margin="0,0,16,6" />
+                </WrapPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2. MAIN SPLIT: INVOICES GRID & DETAILS PANE -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Invoices DataGrid -->
+            <Border Grid.Column="0"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Margin="0,0,10,0">
+                <DataGrid ItemsSource="{Binding Invoices}"
+                          SelectedItem="{Binding SelectedInvoice, Mode=TwoWay}"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column"
+                          BorderThickness="0"
+                          Background="Transparent"
+                          RowHeaderWidth="0"
+                          SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <!-- Invoice # -->
+                        <DataGridTextColumn Header="Invoice #"
+                                            Binding="{Binding InvoiceNumber}"
+                                            Width="130"
+                                            FontWeight="SemiBold" />
+
+                        <!-- Date -->
+                        <DataGridTextColumn Header="Date"
+                                            Binding="{Binding BusinessDate, StringFormat='yyyy-MM-dd'}"
+                                            Width="90" />
+
+                        <!-- Customer -->
+                        <DataGridTextColumn Header="Customer"
+                                            Binding="{Binding CustomerNameSnapshot}"
+                                            Width="*" />
+
+                        <!-- Type -->
+                        <DataGridTextColumn Header="Type"
+                                            Binding="{Binding SaleType}"
+                                            Width="70" />
+
+                        <!-- Net Total -->
+                        <DataGridTextColumn Header="Net Amount"
+                                            Binding="{Binding NetTotal, StringFormat='N2'}"
+                                            Width="100"
+                                            FontWeight="Bold" />
+
+                        <!-- Status -->
+                        <DataGridTemplateColumn Header="Status" Width="85">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Status}" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#2E7D32" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                                        <Setter Property="Foreground" Value="Crimson" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Border>
+
+            <!-- Invoice Details Pane -->
+            <Border Grid.Column="1"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="16">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Details Header -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,12">
+                        <TextBlock Text="{Binding SelectedInvoiceDetails.InvoiceNumber, FallbackValue='Select an invoice'}"
+                                   FontSize="16"
+                                   FontWeight="Bold" />
+                        <TextBlock Text="{Binding SelectedInvoiceDetails.CustomerNameSnapshot}"
+                                   Foreground="{StaticResource Brush.TextMuted}"
+                                   FontSize="12" />
+                    </StackPanel>
+
+                    <!-- Lines Items & Batch Allocation breakdown -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding SelectedInvoiceDetails.Items}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{StaticResource Brush.Border}"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="0,6,0,8"
+                                            Margin="0,0,0,4">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Item Summary Line -->
+                                            <Grid Grid.Row="0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding ProductNameSnapshot}" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding ProductCodeSnapshot}" FontSize="10" Foreground="{StaticResource Brush.TextMuted}" />
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                    <TextBlock Text="{Binding NetLineAmount, StringFormat='Rs. {0:N2}'}" FontWeight="Bold" HorizontalAlignment="Right" />
+                                                    <TextBlock Text="{Binding Quantity, StringFormat='{}{0:0.##} units'}" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Right" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Sub-Allocations (Batch details) -->
+                                            <ItemsControl Grid.Row="1" ItemsSource="{Binding BatchAllocations}" Margin="8,4,0,0">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock FontSize="10" Foreground="DimGray">
+                                                            <Run Text="↳ Batch: " />
+                                                            <Run Text="{Binding BatchNumberSnapshot}" FontWeight="SemiBold" />
+                                                            <Run Text=" | Exp: " />
+                                                            <Run Text="{Binding ExpiryDateSnapshot, StringFormat='MM/yy'}" />
+                                                            <Run Text=" | Qty: " />
+                                                            <Run Text="{Binding Quantity, StringFormat='0.##'}" FontWeight="SemiBold" />
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Bottom Details Summary -->
+                    <Border Grid.Row="2"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="0,1,0,0"
+                            Padding="0,10,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="0,0,0,4">
+                                <TextBlock Text="Gross Total:" Foreground="{StaticResource Brush.TextMuted}" />
+                                <TextBlock Text="{Binding SelectedInvoiceDetails.GrossTotal, StringFormat='N2'}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <Grid Grid.Row="1" Margin="0,0,0,4">
+                                <TextBlock Text="Discounts:" Foreground="{StaticResource Brush.TextMuted}" />
+                                <TextBlock Text="{Binding SelectedInvoiceDetails.LineDiscountTotal, StringFormat='-{0:N2}'}" HorizontalAlignment="Right" Foreground="Crimson" />
+                            </Grid>
+                            <Grid Grid.Row="2">
+                                <TextBlock Text="Net Total:" FontWeight="Bold" FontSize="14" />
+                                <TextBlock Text="{Binding SelectedInvoiceDetails.NetTotal, StringFormat='Rs. {0:N2}'}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Right" />
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 3. BOTTOM STATUS BAR -->
+        <Border Grid.Row="2"
+                Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="16,6"
+                Margin="0,10,0,0">
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="11"
+                       Foreground="{StaticResource Brush.TextMuted}" />
+        </Border>
+    </Grid>
+</UserControl>

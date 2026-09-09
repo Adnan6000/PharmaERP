@@ -1,0 +1,267 @@
+<UserControl x:Class="PharmaERP.Desktop.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+             xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="28,24">
+        <StackPanel MaxWidth="900" HorizontalAlignment="Left">
+
+            <!-- PAGE HEADER -->
+            <Grid Margin="0,0,0,24">
+                <StackPanel>
+                    <TextBlock Text="Database &amp; Network Configuration"
+                               Style="{StaticResource Text.Display}"
+                               Margin="0,0,0,4" />
+                    <TextBlock Text="Manage SQL Server profiles, verify office LAN connectivity, and apply database migrations."
+                               Foreground="{StaticResource Brush.Text.Secondary}"
+                               FontSize="13" />
+                </StackPanel>
+            </Grid>
+
+            <!-- 1. ACTIVE RUNTIME CONNECTION CARD -->
+            <Border Style="{StaticResource Card.Default}" Margin="0,0,0,20">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Active Database State"
+                                   Style="{StaticResource Text.Subheading}"
+                                   VerticalAlignment="Center" />
+
+                        <Button Grid.Column="1"
+                                Style="{StaticResource Button.Outline}"
+                                Content="Test Active Connection"
+                                Command="{Binding TestActiveConnectionCommand}"
+                                Padding="12,6"
+                                FontSize="12" />
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="30" />
+                            <RowDefinition Height="30" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Active Profile:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ConnectionStore.ActiveProfile}" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Connection Status:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ConnectionStore.StatusText}" FontWeight="SemiBold" Foreground="{StaticResource Brush.Accent}" FontSize="13" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Roundtrip Latency:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ConnectionStore.LatencyText}" FontSize="12" VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Schema Initialized:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ConnectionStore.IsDatabaseInitialized, Converter={x:Null}}" FontSize="12" VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="Yes — Applied EF Core migrations detected" />
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ConnectionStore.IsDatabaseInitialized}" Value="False">
+                                            <Setter Property="Text" Value="No — Pending schema migrations. Click 'Initialize Database' below." />
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Status.Warning}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+
+                    <!-- Error Alert -->
+                    <Border Background="{StaticResource Brush.Status.Error.Bg}"
+                            BorderBrush="{StaticResource Brush.Status.Error}"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Padding="12"
+                            Margin="0,14,0,0"
+                            Visibility="{Binding ConnectionStore.ErrorMessage, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding ConnectionStore.ErrorMessage}"
+                                   Foreground="{StaticResource Brush.Status.Error}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- 2. PROFILE CONFIGURATION & SWITCHING CARD -->
+            <Border Style="{StaticResource Card.Default}" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Workstation Profile Selection"
+                               Style="{StaticResource Text.Subheading}"
+                               Margin="0,0,0,12" />
+
+                    <TextBlock Text="Select the profile for this workstation. For single-PC standalone installations, select 'Local'. For multiple PCs connecting across an office LAN, select 'LAN'."
+                               Foreground="{StaticResource Brush.Text.Secondary}"
+                               FontSize="12"
+                               Margin="0,0,0,16"
+                               TextWrapping="Wrap" />
+
+                    <!-- Profile Dropdown -->
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="300" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Select Profile:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding Profiles}"
+                                  SelectedItem="{Binding SelectedProfile}"
+                                  VerticalContentAlignment="Center" />
+                    </Grid>
+
+                    <!-- Profile Details Box -->
+                    <Border Background="{StaticResource Brush.Surface.Muted}"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="16"
+                            Margin="0,0,0,16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="140" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="26" />
+                                <RowDefinition Height="26" />
+                                <RowDefinition Height="26" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Description:" Style="{StaticResource Form.Label}" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ProfileDescription}" FontSize="12" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Server:" Style="{StaticResource Form.Label}" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ProfileServer}" FontSize="12" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Database:" Style="{StaticResource Form.Label}" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ProfileDatabase}" FontSize="12" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Connection String:" Style="{StaticResource Form.Label}" Margin="0,4,0,0" />
+                            <TextBox Grid.Row="3" Grid.Column="1"
+                                     Text="{Binding ProfileConnectionString, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     FontSize="11"
+                                     Foreground="{StaticResource Brush.Text.Secondary}"
+                                     Margin="0,4,0,0"
+                                     TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Profile Actions -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="Test Selected Profile"
+                                Command="{Binding TestSelectedProfileCommand}"
+                                Padding="14,8"
+                                Margin="0,0,12,0" />
+
+                        <Button Style="{StaticResource Button.Primary}"
+                                Content="Save Profile as Active"
+                                Command="{Binding ApplyProfileCommand}"
+                                Padding="16,8" />
+                    </StackPanel>
+
+                    <!-- Test Result Box -->
+                    <Border Background="{StaticResource Brush.Surface.Muted}"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Padding="12"
+                            Margin="0,0,0,10"
+                            Visibility="{Binding ProfileTestResultText, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding ProfileTestResultText}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap" />
+                    </Border>
+
+                    <!-- Save Result Box -->
+                    <Border Background="{StaticResource Brush.Status.Info.Bg}"
+                            BorderBrush="{StaticResource Brush.Status.Info}"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Padding="12"
+                            Visibility="{Binding SaveMessage, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding SaveMessage}"
+                                   Foreground="{StaticResource Brush.Status.Info}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- 3. DATABASE SCHEMA INITIALIZATION / UPGRADE CARD -->
+            <Border Style="{StaticResource Card.Default}">
+                <StackPanel>
+                    <TextBlock Text="Database Schema Migration &amp; Upgrade"
+                               Style="{StaticResource Text.Subheading}"
+                               Margin="0,0,0,8" />
+
+                    <TextBlock Text="Executes official Entity Framework Core migrations against the active database server. Ensures all tables, unique indexes, constraints, and decimal precision configurations are properly deployed."
+                               Foreground="{StaticResource Brush.Text.Secondary}"
+                               FontSize="12"
+                               LineHeight="18"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,16" />
+
+                    <Button Style="{StaticResource Button.Primary}"
+                            Content="Initialize / Upgrade Database"
+                            Command="{Binding MigrateDatabaseCommand}"
+                            Padding="18,10"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,14" />
+
+                    <!-- Migration Status Box -->
+                    <Border Background="{StaticResource Brush.Surface.Muted}"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Padding="12"
+                            Margin="0,0,0,10"
+                            Visibility="{Binding MigrationStatusMessage, Converter={StaticResource NullToVis}}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding MigrationStatusMessage}"
+                                       FontWeight="SemiBold"
+                                       FontSize="12" />
+                            <TextBox Text="{Binding MigrationTechnicalDetails, Mode=OneWay}"
+                                     IsReadOnly="True"
+                                     Margin="0,8,0,0"
+                                     Height="80"
+                                     VerticalScrollBarVisibility="Auto"
+                                     FontSize="11"
+                                     Foreground="{StaticResource Brush.Text.Secondary}"
+                                     Visibility="{Binding MigrationTechnicalDetails, Converter={StaticResource NullToVis}}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+

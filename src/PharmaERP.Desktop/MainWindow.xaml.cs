@@ -1,24 +1,49 @@
-﻿using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using PharmaERP.Desktop.ViewModels;
 
-namespace PharmaERP.Desktop
+namespace PharmaERP.Desktop;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml shell.
+/// Resolves MainWindowViewModel via Dependency Injection.
+/// </summary>
+public partial class MainWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    public MainWindow(MainWindowViewModel viewModel)
     {
-        public MainWindow()
+        InitializeComponent();
+        DataContext = viewModel;
+        Loaded += (_, _) => Focus();
+        PreviewKeyDown += MainWindow_PreviewKeyDown;
+    }
+
+    private void MainWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (DataContext is not MainWindowViewModel vm) return;
+
+        if (e.Key == System.Windows.Input.Key.F2)
         {
-            InitializeComponent();
+            if (vm.PurchaseEntryHotkeyCommand.CanExecute(null))
+            {
+                vm.PurchaseEntryHotkeyCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == System.Windows.Input.Key.F3)
+        {
+            if (vm.SalesEntryHotkeyCommand.CanExecute(null))
+            {
+                vm.SalesEntryHotkeyCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
+        else if (e.Key == System.Windows.Input.Key.F5)
+        {
+            if (vm.RefreshCommand.CanExecute(null))
+            {
+                vm.RefreshCommand.Execute(null);
+                e.Handled = true;
+            }
         }
     }
 }

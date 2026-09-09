@@ -1,5 +1,13 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/PharmaERP.Application/PharmaERP.Application.csproj" />
     <Project Path="src/PharmaERP.Desktop/PharmaERP.Desktop.csproj" />
+    <Project Path="src/PharmaERP.Domain/PharmaERP.Domain.csproj" Id="76c0ee2f-a66e-455e-8b8e-c8a8f6aaeb9d" />
+    <Project Path="src/PharmaERP.Infrastructure/PharmaERP.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PharmaERP.Domain.Tests/PharmaERP.Domain.Tests.csproj" />
+    <Project Path="tests/PharmaERP.Application.Tests/PharmaERP.Application.Tests.csproj" />
+    <Project Path="tests/PharmaERP.Infrastructure.Tests/PharmaERP.Infrastructure.Tests.csproj" />
   </Folder>
 </Solution>

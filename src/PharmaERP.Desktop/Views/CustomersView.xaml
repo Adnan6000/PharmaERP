@@ -1,0 +1,341 @@
+<UserControl x:Class="PharmaERP.Desktop.Views.CustomersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+             xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:CustomersViewModel}">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- MAIN WORKSPACE -->
+        <Grid Margin="24,20">
+            <Grid.RowDefinitions>
+                <!-- Page Header -->
+                <RowDefinition Height="Auto" />
+                <!-- Search Toolbar -->
+                <RowDefinition Height="Auto" />
+                <!-- Customers Table -->
+                <RowDefinition Height="*" />
+                <!-- Pagination Footer -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 1. PAGE HEADER -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Customer Directory"
+                               Style="{StaticResource Text.Display}"
+                               Margin="0,0,0,4" />
+                    <TextBlock Text="Manage retail and wholesale customer accounts, contact details, and credit limits."
+                               Foreground="{StaticResource Brush.Text.Secondary}"
+                               FontSize="13" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource Button.Outline}"
+                            Command="{Binding RefreshCommand}"
+                            Padding="12,7"
+                            Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔄" Margin="0,0,6,0" />
+                            <TextBlock Text="Refresh (F5)" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource Button.Primary}"
+                            Command="{Binding NewCommand}"
+                            Padding="14,7">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="➕" Margin="0,0,6,0" />
+                            <TextBlock Text="New Customer (Ctrl+N)" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 2. SEARCH TOOLBAR -->
+            <Border Grid.Row="1"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="14,10"
+                    Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="320" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0">
+                        <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="28,6,8,6"
+                                 VerticalContentAlignment="Center" />
+                        <TextBlock Text="🔍"
+                                   Foreground="{StaticResource Brush.Text.Muted}"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,0,0"
+                                   IsHitTestVisible="False" />
+                    </Grid>
+
+                    <Button Grid.Column="2"
+                            Style="{StaticResource Button.Outline}"
+                            Content="Reset Search"
+                            Command="{Binding ClearFiltersCommand}"
+                            Padding="10,4"
+                            FontSize="12" />
+                </Grid>
+            </Border>
+
+            <!-- 3. CUSTOMERS DATAGRID -->
+            <Border Grid.Row="2"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                <Grid>
+                    <DataGrid ItemsSource="{Binding Items}"
+                              SelectedItem="{Binding SelectedItem}"
+                              BorderThickness="0"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Customer Code"
+                                                Binding="{Binding CustomerCode}"
+                                                Width="130" />
+
+                            <DataGridTemplateColumn Header="Customer Name" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{StaticResource Brush.Text.Primary}"
+                                                   VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTextColumn Header="Contact Person"
+                                                Binding="{Binding ContactPerson}"
+                                                Width="160" />
+
+                            <DataGridTextColumn Header="Phone"
+                                                Binding="{Binding Phone}"
+                                                Width="140" />
+
+                            <DataGridTextColumn Header="Credit Limit"
+                                                Binding="{Binding CreditLimit, StringFormat={}{0:C2}}"
+                                                Width="130" />
+
+                            <DataGridTemplateColumn Header="Status" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#E6F4EA" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                            <Setter Property="Background" Value="#F1F3F4" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontSize="11" FontWeight="Medium">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="Active" />
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                                                <Setter Property="Text" Value="Inactive" />
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Actions" Width="130">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource Button.Subtle}"
+                                                    Content="Edit"
+                                                    Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Margin="0,0,6,0" />
+                                            <Button Style="{StaticResource Button.Subtle}"
+                                                    Content="Toggle"
+                                                    Command="{Binding DataContext.ToggleActiveCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Loading Overlay -->
+                    <Border Background="#80FFFFFF"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="Loading customers..."
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource Brush.Text.Secondary}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 4. PAGINATION FOOTER -->
+            <Grid Grid.Row="3" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="{Binding PageInfoText}"
+                           Foreground="{StaticResource Brush.Text.Secondary}"
+                           FontSize="12"
+                           VerticalAlignment="Center" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="⏮ First"
+                            Command="{Binding FirstPageCommand}"
+                            Padding="8,4"
+                            FontSize="11"
+                            Margin="0,0,4,0" />
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="◀ Prev"
+                            Command="{Binding PreviousPageCommand}"
+                            Padding="8,4"
+                            FontSize="11"
+                            Margin="0,0,4,0" />
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="Next ▶"
+                            Command="{Binding NextPageCommand}"
+                            Padding="8,4"
+                            FontSize="11"
+                            Margin="0,0,4,0" />
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="Last ⏭"
+                            Command="{Binding LastPageCommand}"
+                            Padding="8,4"
+                            FontSize="11" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- DRAWER MODAL -->
+        <Grid Visibility="{Binding IsDrawerOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="#66000000" MouseDown="OnScrimMouseDown" />
+
+            <Border HorizontalAlignment="Right"
+                    Width="440"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0"
+                            Padding="20,16"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="0,0,0,1">
+                        <Grid>
+                            <TextBlock Text="{Binding DrawerTitle}"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center" />
+                            <Button Style="{StaticResource Button.Subtle}"
+                                    Content="✕"
+                                    HorizontalAlignment="Right"
+                                    Command="{Binding CancelCommand}" />
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" Padding="20,16">
+                        <StackPanel>
+                            <TextBlock Text="Customer Code (Auto if blank)" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FormCustomerCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+
+                            <TextBlock Text="Customer Name *" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+
+                            <TextBlock Text="Contact Person" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FormContactPerson, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+
+                            <TextBlock Text="Phone Number" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FormPhone, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+
+                            <TextBlock Text="Address" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FormAddress, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" Margin="0,0,0,14" />
+
+                            <TextBlock Text="Credit Limit" FontWeight="SemiBold" Margin="0,0,0,4" />
+                            <TextBox Text="{Binding FormCreditLimit, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}" Margin="0,0,0,14" />
+
+                            <CheckBox Content="Active Customer" IsChecked="{Binding FormIsActive}" Margin="0,4,0,14" />
+
+                            <Border Background="#FDE8E8"
+                                    BorderBrush="#F98080"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="10"
+                                    Margin="0,6,0,0"
+                                    Visibility="{Binding FormErrorMessage, Converter={StaticResource NullToVis}}">
+                                <TextBlock Text="{Binding FormErrorMessage}"
+                                           Foreground="#9B1C1C"
+                                           TextWrapping="Wrap"
+                                           FontSize="12" />
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2"
+                            Padding="20,14"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="0,1,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}"
+                                    Content="Cancel"
+                                    Command="{Binding CancelCommand}"
+                                    Margin="0,0,10,0"
+                                    Padding="14,6" />
+                            <Button Style="{StaticResource Button.Primary}"
+                                    Content="Save Customer (Ctrl+S)"
+                                    Command="{Binding SaveCommand}"
+                                    Padding="16,6" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
+

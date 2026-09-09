@@ -1,0 +1,15 @@
+# PharmaERP EditorConfig
+# Root configuration for code style and analyzers
+
+root = true
+
+[*.cs]
+# ==============================================================================
+# Architectural Style: Explicit Constructors
+# For services, repositories, ViewModels, and WPF classes, explicit constructors
+# are preferred for maintainability, dependency injection transparency, and debugging.
+# ==============================================================================
+dotnet_style_prefer_primary_constructors = false:none
+csharp_style_prefer_primary_constructors = false:none
+dotnet_diagnostic.IDE0290.severity = none
+

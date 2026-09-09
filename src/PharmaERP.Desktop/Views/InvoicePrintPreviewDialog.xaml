@@ -1,0 +1,83 @@
+<Window x:Class="PharmaERP.Desktop.Views.InvoicePrintPreviewDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+        mc:Ignorable="d"
+        Title="Invoice Print Preview"
+        Height="780"
+        Width="880"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource Brush.Background}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Top Toolbar -->
+            <RowDefinition Height="Auto" />
+            <!-- Document Preview Area -->
+            <RowDefinition Height="*" />
+            <!-- Bottom Status / Action Bar -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. TOOLBAR -->
+        <Border Grid.Row="0"
+                Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="0,0,0,1"
+                Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Format: " VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0" />
+                    <RadioButton Content="80mm Thermal Receipt"
+                                 IsChecked="{Binding IsThermalSelected, Mode=OneWay}"
+                                 Command="{Binding SetThermalCommand}"
+                                 VerticalAlignment="Center"
+                                 Margin="0,0,16,0" />
+                    <RadioButton Content="A4 Full Page Invoice"
+                                 IsChecked="{Binding IsA4Selected, Mode=OneWay}"
+                                 Command="{Binding SetA4Command}"
+                                 VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Print (Enter)"
+                            Style="{StaticResource Button.Primary}"
+                            Command="{Binding PrintCommand}"
+                            Padding="16,6"
+                            Margin="0,0,8,0" />
+                    <Button Content="Close (Esc)"
+                            Style="{StaticResource Button.Outline}"
+                            Click="CloseButton_Click"
+                            Padding="14,6" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 2. DOCUMENT VIEWER -->
+        <FlowDocumentScrollViewer Grid.Row="1"
+                                 Document="{Binding Document}"
+                                 VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
+                                 Background="{StaticResource Brush.Background}"
+                                 Margin="10" />
+
+        <!-- 3. STATUS BAR -->
+        <Border Grid.Row="2"
+                Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="0,1,0,0"
+                Padding="16,6">
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="11"
+                       Foreground="{StaticResource Brush.TextMuted}" />
+        </Border>
+    </Grid>
+</Window>
+

@@ -1,0 +1,236 @@
+<UserControl x:Class="PharmaERP.Desktop.Views.SalesReturnsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+             xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:SalesReturnsViewModel}">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="24,18">
+        <Grid.RowDefinitions>
+            <!-- Invoice Search Strip -->
+            <RowDefinition Height="Auto" />
+            <!-- Main Content: Return Entry & Past Returns Grid -->
+            <RowDefinition Height="*" />
+            <!-- Bottom Status Bar -->
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 1. SEARCH ORIGINAL INVOICE STRIP -->
+        <Border Grid.Row="0"
+                Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="16,12"
+                Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0"
+                           Text="Customer Sales Returns"
+                           Style="{StaticResource Text.Display}"
+                           FontSize="20"
+                           Margin="0,0,0,10" />
+
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="280" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Original Invoice #: " VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,8,0" />
+                    <TextBox Grid.Column="1"
+                             Text="{Binding InvoiceSearchNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             FontSize="14"
+                             Padding="8,5"
+                             VerticalContentAlignment="Center"
+                             KeyDown="InvoiceSearchBox_KeyDown"
+                             Tag="e.g. SINV-2026-000001" />
+
+                    <Button Grid.Column="2"
+                            Style="{StaticResource Button.Primary}"
+                            Content="Find Invoice"
+                            Command="{Binding SearchOriginalInvoiceCommand}"
+                            Padding="14,6"
+                            Margin="8,0,0,0" />
+
+                    <TextBlock Grid.Column="3"
+                               Text="{Binding StatusMessage}"
+                               VerticalAlignment="Center"
+                               Margin="16,0,0,0"
+                               FontWeight="Medium">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{StaticResource Brush.Primary}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsError}" Value="True">
+                                        <Setter Property="Foreground" Value="Crimson" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- 2. MAIN TABS: PROCESS RETURN VS PAST RETURNS -->
+        <TabControl Grid.Row="1" Background="Transparent" BorderThickness="0">
+            <!-- TAB 1: NEW RETURN ENTRY -->
+            <TabItem Header="Process Return" FontSize="13" FontWeight="SemiBold">
+                <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Items Grid -->
+                    <Border Grid.Row="0"
+                            Background="{StaticResource Brush.Surface}"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Margin="0,0,0,12">
+                        <DataGrid ItemsSource="{Binding ReturnItems}"
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  BorderThickness="0"
+                                  Background="Transparent"
+                                  RowHeaderWidth="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Code" Binding="{Binding ProductCode}" Width="90" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Medicine Description" Binding="{Binding ProductName}" Width="*" IsReadOnly="True" FontWeight="SemiBold" />
+                                <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="60" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Sold" Binding="{Binding SoldQuantity, StringFormat='0.##'}" Width="65" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Returned" Binding="{Binding AlreadyReturned, StringFormat='0.##'}" Width="75" IsReadOnly="True" />
+                                <DataGridTextColumn Header="Eligible" Binding="{Binding AvailableToReturn, StringFormat='0.##'}" Width="75" IsReadOnly="True" FontWeight="Medium" />
+                                <DataGridTextColumn Header="Return Qty" Binding="{Binding ReturnQuantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='0.##'}" Width="90" />
+                                <DataGridTextColumn Header="Refund Amount" Binding="{Binding RefundAmount, StringFormat='N2'}" Width="110" IsReadOnly="True" FontWeight="Bold" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+
+                    <!-- Bottom Return Submission Panel -->
+                    <Border Grid.Row="1"
+                            Background="{StaticResource Brush.Surface}"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="18,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Reason for Return: " VerticalAlignment="Center" Margin="0,0,6,0" />
+                                <TextBox Width="260"
+                                         Text="{Binding ReturnReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Padding="6,4"
+                                         VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,24,0">
+                                <TextBlock Text="Total Refund:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <Border Background="#E8F5E9" CornerRadius="6" Padding="12,4">
+                                    <TextBlock Text="{Binding TotalRefundAmount, StringFormat='Rs. {0:N2}'}"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Foreground="#2E7D32" />
+                                </Border>
+                            </StackPanel>
+
+                            <Button Grid.Column="2"
+                                    Style="{StaticResource Button.Primary}"
+                                    Content="Confirm &amp; Post Return"
+                                    Command="{Binding PostReturnCommand}"
+                                    Padding="18,8"
+                                    FontWeight="Bold" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- TAB 2: PAST RETURNS HISTORY -->
+            <TabItem Header="Returns History" FontSize="13" FontWeight="SemiBold">
+                <Grid Margin="0,10,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="Refresh History"
+                                Style="{StaticResource Button.Outline}"
+                                Command="{Binding RefreshHistoryCommand}"
+                                Padding="12,5"
+                                Margin="0,0,8,0" />
+                        <Button Content="Cancel Return"
+                                Style="{StaticResource Button.Outline}"
+                                Foreground="Crimson"
+                                Command="{Binding CancelReturnCommand}"
+                                Padding="12,5" />
+                    </StackPanel>
+
+                    <Border Grid.Row="1"
+                            Background="{StaticResource Brush.Surface}"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6">
+                        <DataGrid ItemsSource="{Binding PastReturns}"
+                                  SelectedItem="{Binding SelectedPastReturn, Mode=TwoWay}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  GridLinesVisibility="Horizontal"
+                                  HeadersVisibility="Column"
+                                  BorderThickness="0"
+                                  Background="Transparent"
+                                  RowHeaderWidth="0">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Return #" Binding="{Binding ReturnNumber}" Width="130" FontWeight="SemiBold" />
+                                <DataGridTextColumn Header="Original Invoice #" Binding="{Binding OriginalSaleInvoiceNumber}" Width="140" />
+                                <DataGridTextColumn Header="Date" Binding="{Binding ReturnDate, StringFormat='yyyy-MM-dd'}" Width="90" />
+                                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerNameSnapshot}" Width="*" />
+                                <DataGridTextColumn Header="Refund Amount" Binding="{Binding TotalAmount, StringFormat='N2'}" Width="110" FontWeight="Bold" />
+                                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="85" />
+                                <DataGridTextColumn Header="Reason" Binding="{Binding Reason}" Width="180" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+
+        <!-- 3. BOTTOM STATUS BAR -->
+        <Border Grid.Row="2"
+                Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="16,6"
+                Margin="0,10,0,0">
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="11"
+                       Foreground="{StaticResource Brush.TextMuted}" />
+        </Border>
+    </Grid>
+</UserControl>
+

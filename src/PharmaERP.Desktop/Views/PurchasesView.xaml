@@ -1,0 +1,380 @@
+<UserControl x:Class="PharmaERP.Desktop.Views.PurchasesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+             xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:PurchasesViewModel}">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- MAIN WORKSPACE -->
+        <Grid Margin="24,20">
+            <Grid.RowDefinitions>
+                <!-- Header -->
+                <RowDefinition Height="Auto" />
+                <!-- Search & Filters -->
+                <RowDefinition Height="Auto" />
+                <!-- Invoices Table -->
+                <RowDefinition Height="*" />
+                <!-- Pagination Footer -->
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 1. PAGE HEADER -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Purchase Invoices"
+                               Style="{StaticResource Text.Display}"
+                               Margin="0,0,0,4" />
+                    <TextBlock Text="View supplier procurement bills, inspect line item details, and track stock receipts."
+                               Foreground="{StaticResource Brush.Text.Secondary}"
+                               FontSize="13" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource Button.Outline}"
+                            Command="{Binding RefreshCommand}"
+                            Padding="12,7"
+                            Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🔄" Margin="0,0,6,0" />
+                            <TextBlock Text="Refresh (F5)" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource Button.Primary}"
+                            Command="{Binding NewPurchaseEntryCommand}"
+                            Padding="14,7">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="➕" Margin="0,0,6,0" />
+                            <TextBlock Text="New Purchase Entry (F2)" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 2. SEARCH & FILTER TOOLBAR -->
+            <Border Grid.Row="1"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="14,10"
+                    Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="280" />
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" Margin="0,0,10,0">
+                        <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="28,6,8,6"
+                                 VerticalContentAlignment="Center" />
+                        <TextBlock Text="🔍"
+                                   Foreground="{StaticResource Brush.Text.Muted}"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0,0,0"
+                                   IsHitTestVisible="False" />
+                    </Grid>
+
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding Suppliers}"
+                              SelectedItem="{Binding SelectedSupplierFilter}"
+                              DisplayMemberPath="Name"
+                              Margin="0,0,10,0"
+                              VerticalContentAlignment="Center" />
+
+                    <Button Grid.Column="3"
+                            Style="{StaticResource Button.Outline}"
+                            Content="Reset Filters"
+                            Command="{Binding ClearFiltersCommand}"
+                            Padding="10,4"
+                            FontSize="12" />
+                </Grid>
+            </Border>
+
+            <!-- 3. INVOICES DATAGRID -->
+            <Border Grid.Row="2"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="6">
+                <Grid>
+                    <DataGrid ItemsSource="{Binding Invoices}"
+                              SelectedItem="{Binding SelectedInvoice}"
+                              BorderThickness="0"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Invoice Number" Binding="{Binding InvoiceNumber}" Width="150" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Supplier Bill #" Binding="{Binding SupplierInvoiceNumber}" Width="140" />
+                            <DataGridTextColumn Header="Supplier Name" Binding="{Binding SupplierName}" Width="*" />
+                            <DataGridTextColumn Header="Invoice Date" Binding="{Binding InvoiceDate, StringFormat={}{0:yyyy-MM-dd}}" Width="110" />
+                            <DataGridTextColumn Header="Items" Binding="{Binding ItemCount}" Width="70" />
+                            <DataGridTextColumn Header="Net Amount" Binding="{Binding NetTotal, StringFormat={}{0:C2}}" Width="130" FontWeight="SemiBold" Foreground="{StaticResource Brush.Primary}" />
+
+                            <DataGridTemplateColumn Header="Status" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#E6F4EA" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                                            <Setter Property="Background" Value="#FDE8E8" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Medium">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Status.Error}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="Actions" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource Button.Subtle}"
+                                                    Content="View"
+                                                    Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Margin="0,0,6,0" />
+                                            <Button Style="{StaticResource Button.Subtle}"
+                                                    Content="Cancel"
+                                                    Command="{Binding DataContext.OpenCancelDialogCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Loading Overlay -->
+                    <Border Background="#80FFFFFF"
+                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="Loading purchase invoices..."
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource Brush.Text.Secondary}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 4. PAGINATION FOOTER -->
+            <Grid Grid.Row="3" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="{Binding PageInfoText}"
+                           Foreground="{StaticResource Brush.Text.Secondary}"
+                           FontSize="12"
+                           VerticalAlignment="Center" />
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="⏮ First"
+                            Command="{Binding FirstPageCommand}"
+                            Padding="8,4"
+                            FontSize="11"
+                            Margin="0,0,4,0" />
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="◀ Prev"
+                            Command="{Binding PreviousPageCommand}"
+                            Padding="8,4"
+                            FontSize="11"
+                            Margin="0,0,4,0" />
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="Next ▶"
+                            Command="{Binding NextPageCommand}"
+                            Padding="8,4"
+                            FontSize="11"
+                            Margin="0,0,4,0" />
+                    <Button Style="{StaticResource Button.Outline}"
+                            Content="Last ⏭"
+                            Command="{Binding LastPageCommand}"
+                            Padding="8,4"
+                            FontSize="11" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- DETAILS DRAWER -->
+        <Grid Visibility="{Binding IsDetailsDrawerOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="#66000000" MouseDown="OnScrimMouseDown" />
+
+            <Border HorizontalAlignment="Right"
+                    Width="600"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <TextBlock Text="{Binding SelectedInvoiceDetails.InvoiceNumber, StringFormat='Invoice Details — {0}'}"
+                                       FontSize="16"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center" />
+                            <Button Style="{StaticResource Button.Subtle}"
+                                    Content="✕"
+                                    HorizontalAlignment="Right"
+                                    Command="{Binding CloseDetailsCommand}" />
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" Padding="20,16">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Supplier:" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource Brush.Text.Muted}" />
+                                    <TextBlock Text="{Binding SelectedInvoiceDetails.SupplierName}" FontWeight="Bold" FontSize="14" Margin="0,2,0,8" />
+
+                                    <TextBlock Text="Invoice Date:" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource Brush.Text.Muted}" />
+                                    <TextBlock Text="{Binding SelectedInvoiceDetails.InvoiceDate, StringFormat={}{0:yyyy-MM-dd}}" FontSize="13" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Supplier Bill #:" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource Brush.Text.Muted}" />
+                                    <TextBlock Text="{Binding SelectedInvoiceDetails.SupplierInvoiceNumber}" FontWeight="SemiBold" FontSize="13" Margin="0,2,0,8" />
+
+                                    <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource Brush.Text.Muted}" />
+                                    <TextBlock Text="{Binding SelectedInvoiceDetails.Status}" FontWeight="Bold" FontSize="13" />
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Text="Line Items" FontWeight="Bold" FontSize="13" Margin="0,0,0,8" />
+                            <DataGrid ItemsSource="{Binding SelectedInvoiceDetails.Items}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True"
+                                      BorderThickness="1"
+                                      BorderBrush="{StaticResource Brush.Border}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*" />
+                                    <DataGridTextColumn Header="Batch" Binding="{Binding BatchNumber}" Width="90" />
+                                    <DataGridTextColumn Header="Expiry" Binding="{Binding ExpiryDate, StringFormat={}{0:yyyy-MM-dd}}" Width="90" />
+                                    <DataGridTextColumn Header="Qty" Binding="{Binding Quantity, StringFormat={}{0:N2}}" Width="70" />
+                                    <DataGridTextColumn Header="Returned" Binding="{Binding ReturnedQuantity, StringFormat={}{0:N2}}" Width="70" />
+                                    <DataGridTextColumn Header="Rate" Binding="{Binding PurchaseRate, StringFormat={}{0:C2}}" Width="80" />
+                                    <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat={}{0:C2}}" Width="90" FontWeight="SemiBold" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <Border Background="{StaticResource Brush.Surface.Muted}" CornerRadius="6" Padding="14" Margin="0,16,0,0">
+                                <StackPanel HorizontalAlignment="Right">
+                                    <TextBlock Text="{Binding SelectedInvoiceDetails.GrossTotal, StringFormat='Gross Total: {0:C2}'}" FontSize="12" Margin="0,0,0,4" />
+                                    <TextBlock Text="{Binding SelectedInvoiceDetails.DiscountAmount, StringFormat='Discount: {0:C2}'}" FontSize="12" Margin="0,0,0,4" Foreground="#D97706" />
+                                    <TextBlock Text="{Binding SelectedInvoiceDetails.NetTotal, StringFormat='Net Payable: {0:C2}'}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource Brush.Primary}" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Padding="20,14" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0">
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="Close"
+                                Command="{Binding CloseDetailsCommand}"
+                                HorizontalAlignment="Right"
+                                Padding="16,6" />
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- CANCEL INVOICE MODAL -->
+        <Grid Visibility="{Binding IsCancelDrawerOpen, Converter={StaticResource BoolToVis}}">
+            <Border Background="#66000000" />
+
+            <Border HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Width="460"
+                    Background="{StaticResource Brush.Surface}"
+                    BorderBrush="{StaticResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="24">
+                <StackPanel>
+                    <TextBlock Text="Cancel Purchase Invoice" FontSize="16" FontWeight="Bold" Margin="0,0,0,8" />
+                    <TextBlock Text="Cancelling this purchase will atomically reverse all stock quantities from on-hand batches and append a compensating ledger entry. This cannot be undone."
+                               Foreground="{StaticResource Brush.Text.Secondary}"
+                               TextWrapping="Wrap"
+                               FontSize="12"
+                               Margin="0,0,0,16" />
+
+                    <TextBlock Text="Reason for Cancellation *" FontWeight="SemiBold" Margin="0,0,0,4" />
+                    <TextBox Text="{Binding CancelReason, UpdateSourceTrigger=PropertyChanged}"
+                             Height="60"
+                             TextWrapping="Wrap"
+                             Margin="0,0,0,12" />
+
+                    <Border Background="#FDE8E8"
+                            BorderBrush="#F98080"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Padding="10"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding CancelErrorMessage, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding CancelErrorMessage}" Foreground="#9B1C1C" TextWrapping="Wrap" FontSize="12" />
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="Dismiss"
+                                Command="{Binding CloseCancelCommand}"
+                                Margin="0,0,10,0"
+                                Padding="14,6" />
+                        <Button Style="{StaticResource Button.Primary}"
+                                Content="Confirm Cancellation"
+                                Background="{StaticResource Brush.Status.Error}"
+                                Command="{Binding ConfirmCancelCommand}"
+                                Padding="16,6" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
+
