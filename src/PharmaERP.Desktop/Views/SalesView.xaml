@@ -223,7 +223,7 @@
                                                 </StackPanel>
 
                                                 <StackPanel Grid.Column="1" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding NetLineAmount, StringFormat='Rs. {0:N2}'}" FontWeight="Bold" HorizontalAlignment="Right" />
+                                                    <TextBlock Text="{Binding NetLineAmount, Converter={StaticResource Money}}" FontWeight="Bold" HorizontalAlignment="Right" />
                                                     <TextBlock Text="{Binding Quantity, StringFormat='{}{0:0.##} units'}" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Right" />
                                                 </StackPanel>
                                             </Grid>
@@ -234,11 +234,11 @@
                                                     <DataTemplate>
                                                         <TextBlock FontSize="10" Foreground="DimGray">
                                                             <Run Text="↳ Batch: " />
-                                                            <Run Text="{Binding BatchNumberSnapshot}" FontWeight="SemiBold" />
+                                                            <Run Text="{Binding BatchNumberSnapshot, Mode=OneWay}" FontWeight="SemiBold" />
                                                             <Run Text=" | Exp: " />
-                                                            <Run Text="{Binding ExpiryDateSnapshot, StringFormat='MM/yy'}" />
+                                                            <Run Text="{Binding ExpiryDateSnapshot, StringFormat='MM/yy', Mode=OneWay}" />
                                                             <Run Text=" | Qty: " />
-                                                            <Run Text="{Binding Quantity, StringFormat='0.##'}" FontWeight="SemiBold" />
+                                                            <Run Text="{Binding Quantity, StringFormat='0.##', Mode=OneWay}" FontWeight="SemiBold" />
                                                         </TextBlock>
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>
@@ -272,7 +272,7 @@
                             </Grid>
                             <Grid Grid.Row="2">
                                 <TextBlock Text="Net Total:" FontWeight="Bold" FontSize="14" />
-                                <TextBlock Text="{Binding SelectedInvoiceDetails.NetTotal, StringFormat='Rs. {0:N2}'}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Right" />
+                                <TextBlock Text="{Binding SelectedInvoiceDetails.NetTotal, Converter={StaticResource Money}}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Right" />
                             </Grid>
                         </Grid>
                     </Border>

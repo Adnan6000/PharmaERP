@@ -22,6 +22,88 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("PharmaERP.Domain.Entities.Account", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("AllowPosting")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsBankAccount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsCashAccount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsControlAccount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<int?>("ParentAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("SystemAccountType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountCode")
+                        .IsUnique();
+
+                    b.HasIndex("ParentAccountId");
+
+                    b.HasIndex("SystemAccountType")
+                        .IsUnique()
+                        .HasFilter("[SystemAccountType] IS NOT NULL");
+
+                    b.ToTable("Accounts", (string)null);
+                });
+
             modelBuilder.Entity("PharmaERP.Domain.Entities.AppConfig", b =>
                 {
                     b.Property<int>("Id")
@@ -105,6 +187,85 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
+            modelBuilder.Entity("PharmaERP.Domain.Entities.ContraVoucher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DestinationAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Narration")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SourceAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VoucherNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DestinationAccountId");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("SourceAccountId");
+
+                    b.HasIndex("VoucherNumber")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessDate", "Id");
+
+                    b.ToTable("ContraVouchers", (string)null);
+                });
+
             modelBuilder.Entity("PharmaERP.Domain.Entities.Customer", b =>
                 {
                     b.Property<int>("Id")
@@ -166,6 +327,245 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.ToTable("Customers", (string)null);
                 });
 
+            modelBuilder.Entity("PharmaERP.Domain.Entities.JournalEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EntryNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Narration")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PostingRole")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ReversesJournalEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("SourceDocumentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SourceDocumentNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("SourceDocumentType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalCredit")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("TotalDebit")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntryNumber")
+                        .IsUnique();
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("ReversesJournalEntryId")
+                        .IsUnique()
+                        .HasFilter("[ReversesJournalEntryId] IS NOT NULL");
+
+                    b.HasIndex("BusinessDate", "PostedAtUtc", "Id");
+
+                    b.HasIndex("SourceDocumentType", "SourceDocumentId", "PostingRole")
+                        .IsUnique()
+                        .HasFilter("[SourceDocumentId] IS NOT NULL");
+
+                    b.ToTable("JournalEntries", null, t =>
+                        {
+                            t.HasTrigger("TR_JournalEntries_EnforceBalanceOnPost");
+
+                            t.HasTrigger("TR_JournalEntries_PreventPostedHeaderModifications");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.JournalEntryLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("CreditAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("DebitAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("JournalEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Narration")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JournalEntryId");
+
+                    b.HasIndex("AccountId", "JournalEntryId");
+
+                    SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("AccountId", "JournalEntryId"), new[] { "DebitAmount", "CreditAmount" });
+
+                    b.HasIndex("CustomerId", "AccountId", "JournalEntryId")
+                        .HasFilter("[CustomerId] IS NOT NULL");
+
+                    b.HasIndex("SupplierId", "AccountId", "JournalEntryId")
+                        .HasFilter("[SupplierId] IS NOT NULL");
+
+                    b.ToTable("JournalEntryLines", null, t =>
+                        {
+                            t.HasTrigger("TR_JournalEntryLines_PreventPostedModifications");
+
+                            t.HasCheckConstraint("CK_JournalEntryLine_Amounts", "([DebitAmount] > 0 AND [CreditAmount] = 0) OR ([CreditAmount] > 0 AND [DebitAmount] = 0)");
+
+                            t.HasCheckConstraint("CK_JournalEntryLine_PartyMutex", "[CustomerId] IS NULL OR [SupplierId] IS NULL");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.JournalVoucher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Narration")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VoucherNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("VoucherNumber")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessDate", "Id");
+
+                    b.ToTable("JournalVouchers", (string)null);
+                });
+
             modelBuilder.Entity("PharmaERP.Domain.Entities.Manufacturer", b =>
                 {
                     b.Property<int>("Id")
@@ -213,6 +613,212 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.HasIndex("Name");
 
                     b.ToTable("Manufacturers", (string)null);
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.OpeningBalanceVoucher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Narration")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VoucherNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("VoucherNumber")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessDate", "Id");
+
+                    b.ToTable("OpeningBalanceVouchers", (string)null);
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.PaymentVoucher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CashOrBankAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Narration")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("OffsetAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SupplierId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VoucherNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CashOrBankAccountId");
+
+                    b.HasIndex("OffsetAccountId");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("SupplierId");
+
+                    b.HasIndex("VoucherNumber")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessDate", "Id");
+
+                    b.ToTable("PaymentVouchers", (string)null);
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.PaymentVoucherAllocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AllocatedAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("AllocatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PaymentVoucherId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseInvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("VoidedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseInvoiceId");
+
+                    b.HasIndex("PaymentVoucherId", "PurchaseInvoiceId");
+
+                    b.ToTable("PaymentVoucherAllocations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PaymentVoucherAllocations_Amount_Positive", "[AllocatedAmount] > 0");
+                        });
                 });
 
             modelBuilder.Entity("PharmaERP.Domain.Entities.Product", b =>
@@ -666,6 +1272,147 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.HasIndex("PurchaseReturnId");
 
                     b.ToTable("PurchaseReturnItems", (string)null);
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.ReceiptVoucher", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CashOrBankAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Narration")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("OffsetAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("PostedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VoucherNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CashOrBankAccountId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("OffsetAccountId");
+
+                    b.HasIndex("OperationId")
+                        .IsUnique();
+
+                    b.HasIndex("VoucherNumber")
+                        .IsUnique();
+
+                    b.HasIndex("BusinessDate", "Id");
+
+                    b.ToTable("ReceiptVouchers", (string)null);
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.ReceiptVoucherAllocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AllocatedAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("AllocatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReceiptVoucherId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SaleInvoiceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VoidReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("VoidedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SaleInvoiceId");
+
+                    b.HasIndex("ReceiptVoucherId", "SaleInvoiceId");
+
+                    b.ToTable("ReceiptVoucherAllocations", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ReceiptVoucherAllocations_Amount_Positive", "[AllocatedAmount] > 0");
+                        });
                 });
 
             modelBuilder.Entity("PharmaERP.Domain.Entities.SaleInvoice", b =>
@@ -1335,6 +2082,123 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.ToTable("DocumentSequences", (string)null);
                 });
 
+            modelBuilder.Entity("PharmaERP.Domain.Entities.Account", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "ParentAccount")
+                        .WithMany("SubAccounts")
+                        .HasForeignKey("ParentAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ParentAccount");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.ContraVoucher", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "DestinationAccount")
+                        .WithMany()
+                        .HasForeignKey("DestinationAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "SourceAccount")
+                        .WithMany()
+                        .HasForeignKey("SourceAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DestinationAccount");
+
+                    b.Navigation("SourceAccount");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.JournalEntry", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.JournalEntry", "ReversesJournalEntry")
+                        .WithMany()
+                        .HasForeignKey("ReversesJournalEntryId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("ReversesJournalEntry");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.JournalEntryLine", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "Account")
+                        .WithMany("JournalLines")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PharmaERP.Domain.Entities.JournalEntry", "JournalEntry")
+                        .WithMany("Lines")
+                        .HasForeignKey("JournalEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Account");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("JournalEntry");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.PaymentVoucher", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "CashOrBankAccount")
+                        .WithMany()
+                        .HasForeignKey("CashOrBankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "OffsetAccount")
+                        .WithMany()
+                        .HasForeignKey("OffsetAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CashOrBankAccount");
+
+                    b.Navigation("OffsetAccount");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.PaymentVoucherAllocation", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.PaymentVoucher", "PaymentVoucher")
+                        .WithMany("Allocations")
+                        .HasForeignKey("PaymentVoucherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany("Allocations")
+                        .HasForeignKey("PurchaseInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PaymentVoucher");
+
+                    b.Navigation("PurchaseInvoice");
+                });
+
             modelBuilder.Entity("PharmaERP.Domain.Entities.Product", b =>
                 {
                     b.HasOne("PharmaERP.Domain.Entities.Category", "Category")
@@ -1462,6 +2326,51 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.Navigation("ProductBatch");
 
                     b.Navigation("PurchaseReturn");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.ReceiptVoucher", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "CashOrBankAccount")
+                        .WithMany()
+                        .HasForeignKey("CashOrBankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("PharmaERP.Domain.Entities.Account", "OffsetAccount")
+                        .WithMany()
+                        .HasForeignKey("OffsetAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CashOrBankAccount");
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("OffsetAccount");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.ReceiptVoucherAllocation", b =>
+                {
+                    b.HasOne("PharmaERP.Domain.Entities.ReceiptVoucher", "ReceiptVoucher")
+                        .WithMany("Allocations")
+                        .HasForeignKey("ReceiptVoucherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("PharmaERP.Domain.Entities.SaleInvoice", "SaleInvoice")
+                        .WithMany("Allocations")
+                        .HasForeignKey("SaleInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ReceiptVoucher");
+
+                    b.Navigation("SaleInvoice");
                 });
 
             modelBuilder.Entity("PharmaERP.Domain.Entities.SaleInvoice", b =>
@@ -1610,14 +2519,31 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.Navigation("ReversesStockMovement");
                 });
 
+            modelBuilder.Entity("PharmaERP.Domain.Entities.Account", b =>
+                {
+                    b.Navigation("JournalLines");
+
+                    b.Navigation("SubAccounts");
+                });
+
             modelBuilder.Entity("PharmaERP.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
                 });
 
+            modelBuilder.Entity("PharmaERP.Domain.Entities.JournalEntry", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("PharmaERP.Domain.Entities.Manufacturer", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("PharmaERP.Domain.Entities.PaymentVoucher", b =>
+                {
+                    b.Navigation("Allocations");
                 });
 
             modelBuilder.Entity("PharmaERP.Domain.Entities.Product", b =>
@@ -1632,6 +2558,8 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("PharmaERP.Domain.Entities.PurchaseInvoice", b =>
                 {
+                    b.Navigation("Allocations");
+
                     b.Navigation("Items");
 
                     b.Navigation("Returns");
@@ -1642,8 +2570,15 @@ namespace PharmaERP.Infrastructure.Persistence.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("PharmaERP.Domain.Entities.ReceiptVoucher", b =>
+                {
+                    b.Navigation("Allocations");
+                });
+
             modelBuilder.Entity("PharmaERP.Domain.Entities.SaleInvoice", b =>
                 {
+                    b.Navigation("Allocations");
+
                     b.Navigation("Items");
                 });
 

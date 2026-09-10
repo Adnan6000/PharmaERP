@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PharmaERP.Application.Interfaces;
 using PharmaERP.Application.Services;
 
 namespace PharmaERP.Application;
@@ -24,6 +25,15 @@ public static class DependencyInjection
         services.AddTransient<ISaleReturnService, SaleReturnService>();
         services.AddTransient<IInvoicePrintDataProvider, InvoicePrintDataProvider>();
         services.AddTransient<IProductLookupService, ProductLookupService>();
+        services.AddTransient<IAccountService, AccountService>();
+        services.AddTransient<IAccountingConfigService, AccountingConfigService>();
+        services.AddTransient<IVoucherService, VoucherService>();
+        services.AddTransient<IJournalService, JournalService>();
+        services.AddTransient<IPartyLedgerService, PartyLedgerService>();
+        services.AddTransient<IAccountingReconciliationService, AccountingReconciliationService>();
+        services.AddTransient<IAccountingSetupService, AccountingSetupService>();
+        services.AddTransient<IPaymentSettlementService, PaymentSettlementService>();
+        services.AddTransient<IRegionalSettingsService, RegionalSettingsService>();
 
         return services;
     }

@@ -120,7 +120,7 @@ public static class A4InvoiceDocumentBuilder
         AddHeaderCell(thRow, "Qty", TextAlignment.Right);
         AddHeaderCell(thRow, "Price", TextAlignment.Right);
         AddHeaderCell(thRow, "Discount", TextAlignment.Right);
-        AddHeaderCell(thRow, "Net Total", TextAlignment.Right);
+        AddHeaderCell(thRow, $"Net Total ({AppCurrency.Symbol})", TextAlignment.Right);
         itemHeaderGroup.Rows.Add(thRow);
         itemsTable.RowGroups.Add(itemHeaderGroup);
 
@@ -189,24 +189,24 @@ public static class A4InvoiceDocumentBuilder
         noteCell.Blocks.Add(new Paragraph(new Run(invoice.ReceiptFooter)) { FontSize = 10, Foreground = Brushes.DimGray, Margin = new Thickness(0, 10, 0, 0) });
 
         var sumCell = new TableCell { TextAlignment = TextAlignment.Right };
-        sumCell.Blocks.Add(CreateSummaryLine("Gross Total:", invoice.GrossTotal.ToString("N2", CultureInfo.InvariantCulture)));
+        sumCell.Blocks.Add(CreateSummaryLine("Gross Total:", AppCurrency.Format(invoice.GrossTotal)));
         if (invoice.LineDiscountTotal > 0)
-            sumCell.Blocks.Add(CreateSummaryLine("Line Discounts:", $"-{invoice.LineDiscountTotal:N2}"));
+            sumCell.Blocks.Add(CreateSummaryLine("Line Discounts:", $"-{AppCurrency.Format(invoice.LineDiscountTotal)}"));
         if (invoice.InvoiceDiscountAmount > 0)
-            sumCell.Blocks.Add(CreateSummaryLine("Invoice Discount:", $"-{invoice.InvoiceDiscountAmount:N2}"));
+            sumCell.Blocks.Add(CreateSummaryLine("Invoice Discount:", $"-{AppCurrency.Format(invoice.InvoiceDiscountAmount)}"));
 
         // Net Payable Box
         var netPara = new Paragraph();
         netPara.Inlines.Add(new Run("Net Payable: ") { FontSize = 14, FontWeight = FontWeights.Bold });
-        netPara.Inlines.Add(new Run(invoice.NetTotal.ToString("N2", CultureInfo.InvariantCulture)) { FontSize = 16, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(15, 76, 129)) });
+        netPara.Inlines.Add(new Run(AppCurrency.Format(invoice.NetTotal)) { FontSize = 16, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Color.FromRgb(15, 76, 129)) });
         netPara.Margin = new Thickness(0, 6, 0, 4);
         sumCell.Blocks.Add(netPara);
 
         if (invoice.TenderedAmount.HasValue)
         {
-            sumCell.Blocks.Add(CreateSummaryLine("Cash Tendered:", invoice.TenderedAmount.Value.ToString("N2", CultureInfo.InvariantCulture)));
+            sumCell.Blocks.Add(CreateSummaryLine("Cash Tendered:", AppCurrency.Format(invoice.TenderedAmount.Value)));
             if (invoice.ChangeGiven.HasValue)
-                sumCell.Blocks.Add(CreateSummaryLine("Change Returned:", invoice.ChangeGiven.Value.ToString("N2", CultureInfo.InvariantCulture)));
+                sumCell.Blocks.Add(CreateSummaryLine("Change Returned:", AppCurrency.Format(invoice.ChangeGiven.Value)));
         }
 
         totalsRow.Cells.Add(noteCell);

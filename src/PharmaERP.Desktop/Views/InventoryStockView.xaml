@@ -108,7 +108,7 @@
                                 <DataGridTextColumn Header="Manufacturer" Binding="{Binding ManufacturerName}" Width="160" />
                                 <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="140" />
                                 <DataGridTextColumn Header="Total Qty On Hand" Binding="{Binding TotalQuantity, StringFormat={}{0:N2}}" Width="140" FontWeight="Bold" />
-                                <DataGridTextColumn Header="Estimated Value" Binding="{Binding EstimatedInventoryValue, StringFormat={}{0:C2}}" Width="150" Foreground="{StaticResource Brush.Primary}" FontWeight="SemiBold" />
+                                <DataGridTextColumn Header="Estimated Value" Binding="{Binding EstimatedInventoryValue, Converter={StaticResource Money}}" Width="150" Foreground="{StaticResource Brush.Primary}" FontWeight="SemiBold" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Border>
@@ -165,8 +165,8 @@
                                 <DataGridTextColumn Header="Batch Number" Binding="{Binding BatchNumber}" Width="130" />
                                 <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:yyyy-MM-dd}}" Width="110" />
                                 <DataGridTextColumn Header="Qty On Hand" Binding="{Binding QuantityOnHand, StringFormat={}{0:N2}}" Width="120" FontWeight="Bold" />
-                                <DataGridTextColumn Header="Avg Purchase Cost" Binding="{Binding AveragePurchaseCost, StringFormat={}{0:C2}}" Width="140" />
-                                <DataGridTextColumn Header="Inventory Value" Binding="{Binding InventoryValue, StringFormat={}{0:C2}}" Width="140" FontWeight="SemiBold" />
+                                <DataGridTextColumn Header="Avg Purchase Cost" Binding="{Binding AveragePurchaseCost, Converter={StaticResource Money}}" Width="140" />
+                                <DataGridTextColumn Header="Inventory Value" Binding="{Binding InventoryValue, Converter={StaticResource Money}}" Width="140" FontWeight="SemiBold" />
                                 <DataGridTemplateColumn Header="Status" Width="110">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
@@ -262,7 +262,7 @@
                                 <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:yyyy-MM-dd}}" Width="110" />
                                 <DataGridTextColumn Header="Days Until Expiry" Binding="{Binding DaysUntilExpiry}" Width="130" FontWeight="Bold" />
                                 <DataGridTextColumn Header="Qty On Hand" Binding="{Binding QuantityOnHand, StringFormat={}{0:N2}}" Width="120" />
-                                <DataGridTextColumn Header="Valuation" Binding="{Binding InventoryValue, StringFormat={}{0:C2}}" Width="130" />
+                                <DataGridTextColumn Header="Valuation" Binding="{Binding InventoryValue, Converter={StaticResource Money}}" Width="130" />
                                 <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120" FontWeight="SemiBold" />
                             </DataGrid.Columns>
                         </DataGrid>
@@ -294,8 +294,8 @@
                                 <DataGridTextColumn Header="Batch" Binding="{Binding BatchNumber}" Width="110" />
                                 <DataGridTextColumn Header="Qty Delta" Binding="{Binding QuantityDelta, StringFormat={}{0:+0.00;-0.00;0.00}}" Width="100" FontWeight="Bold" />
                                 <DataGridTextColumn Header="Balance After" Binding="{Binding BalanceAfter, StringFormat={}{0:N2}}" Width="110" />
-                                <DataGridTextColumn Header="Unit Rate" Binding="{Binding UnitCost, StringFormat={}{0:C2}}" Width="100" />
-                                <DataGridTextColumn Header="Value After" Binding="{Binding InventoryValueAfter, StringFormat={}{0:C2}}" Width="120" />
+                                <DataGridTextColumn Header="Unit Rate" Binding="{Binding UnitCost, Converter={StaticResource Money}}" Width="100" />
+                                <DataGridTextColumn Header="Value After" Binding="{Binding InventoryValueAfter, Converter={StaticResource Money}}" Width="120" />
                                 <DataGridTextColumn Header="Ref Doc" Binding="{Binding ReferenceDocumentNumber}" Width="130" />
                             </DataGrid.Columns>
                         </DataGrid>

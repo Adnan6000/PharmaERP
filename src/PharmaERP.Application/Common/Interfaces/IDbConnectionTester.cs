@@ -6,7 +6,12 @@ public record DbConnectionTestResult(
     string ActiveProfile,
     string ServerDescription,
     string? ErrorMessage,
-    TimeSpan Latency);
+    TimeSpan Latency,
+    bool ServerReachable = false,
+    bool DatabaseExists = false,
+    bool CanCreateDatabase = false,
+    int AppliedMigrationsCount = 0,
+    int PendingMigrationsCount = 0);
 
 /// <summary>
 /// Service contract for asynchronous, non-blocking database connectivity verification.
@@ -16,5 +21,7 @@ public interface IDbConnectionTester
     Task<DbConnectionTestResult> TestConnectionAsync(CancellationToken cancellationToken = default);
 
     Task<DbConnectionTestResult> TestProfileConnectionAsync(string profileName, string connectionString, CancellationToken cancellationToken = default);
+
+    Task<DbConnectionTestResult> TestConfigAsync(PharmaERP.Application.Common.Models.DatabaseConnectionConfig config, CancellationToken cancellationToken = default);
 }
 

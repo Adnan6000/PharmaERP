@@ -74,6 +74,18 @@
         <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
             <views:SettingsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ChartOfAccountsViewModel}">
+            <views:ChartOfAccountsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VouchersViewModel}">
+            <views:VouchersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LedgersViewModel}">
+            <views:LedgersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AccountingSetupViewModel}">
+            <views:AccountingSetupView />
+        </DataTemplate>
     </Window.Resources>
 
     <Window.InputBindings>
@@ -306,6 +318,49 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📥" FontSize="14" Margin="0,0,10,0" />
                                     <TextBlock Text="Opening Stock Entry" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- ACCOUNTING & LEDGERS -->
+                            <TextBlock Text="ACCOUNTING &amp; LEDGERS"
+                                       Style="{StaticResource Text.Muted}"
+                                       FontWeight="Bold"
+                                       FontSize="10"
+                                       Margin="10,14,0,6" />
+
+                            <Button Style="{StaticResource Button.Nav}"
+                                    Command="{Binding NavigateCommand}"
+                                    CommandParameter="Ledgers">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📘" FontSize="14" Margin="0,0,10,0" />
+                                    <TextBlock Text="General &amp; Subledgers" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource Button.Nav}"
+                                    Command="{Binding NavigateCommand}"
+                                    CommandParameter="Vouchers">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📑" FontSize="14" Margin="0,0,10,0" />
+                                    <TextBlock Text="Financial Vouchers" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource Button.Nav}"
+                                    Command="{Binding NavigateCommand}"
+                                    CommandParameter="ChartOfAccounts">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🌲" FontSize="14" Margin="0,0,10,0" />
+                                    <TextBlock Text="Chart of Accounts" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource Button.Nav}"
+                                    Command="{Binding NavigateCommand}"
+                                    CommandParameter="AccountingSetup">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="⚖️" FontSize="14" Margin="0,0,10,0" />
+                                    <TextBlock Text="Accounting Setup &amp; Audit" />
                                 </StackPanel>
                             </Button>
 

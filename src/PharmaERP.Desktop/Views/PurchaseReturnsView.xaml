@@ -119,7 +119,7 @@
                             <DataGridTextColumn Header="Supplier Name" Binding="{Binding SupplierName}" Width="*" />
                             <DataGridTextColumn Header="Return Date" Binding="{Binding ReturnDate, StringFormat={}{0:yyyy-MM-dd}}" Width="110" />
                             <DataGridTextColumn Header="Items" Binding="{Binding ItemCount}" Width="70" />
-                            <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount, StringFormat={}{0:C2}}" Width="130" FontWeight="SemiBold" Foreground="{StaticResource Brush.Primary}" />
+                            <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount, Converter={StaticResource CurrencyConverter}}" Width="130" FontWeight="SemiBold" Foreground="{StaticResource Brush.Primary}" />
                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100" />
 
                             <DataGridTemplateColumn Header="Actions" Width="140">
@@ -275,18 +275,23 @@
                                     <DataGridTextColumn Header="Batch" Binding="{Binding BatchNumber}" Width="100" IsReadOnly="True" />
                                     <DataGridTextColumn Header="Max Qty" Binding="{Binding MaxReturnableQuantity, StringFormat={}{0:N2}}" Width="70" IsReadOnly="True" Foreground="{StaticResource Brush.Text.Muted}" />
                                     <DataGridTextColumn Header="Return Qty" Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}" Width="90" FontWeight="Bold" />
-                                    <DataGridTextColumn Header="Return Rate" Binding="{Binding ReturnRate, StringFormat={}{0:C2}}" Width="90" IsReadOnly="True" />
-                                    <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, StringFormat={}{0:C2}}" Width="90" IsReadOnly="True" FontWeight="SemiBold" />
+                                    <DataGridTextColumn Header="Return Rate" Binding="{Binding ReturnRate, Converter={StaticResource CurrencyConverter}}" Width="90" IsReadOnly="True" />
+                                    <DataGridTextColumn Header="Total" Binding="{Binding LineTotal, Converter={StaticResource CurrencyConverter}}" Width="90" IsReadOnly="True" FontWeight="SemiBold" />
                                 </DataGrid.Columns>
                             </DataGrid>
 
                             <!-- Return Total -->
                             <Border Background="{StaticResource Brush.Surface.Muted}" CornerRadius="6" Padding="12" Margin="0,14,0,0">
-                                <TextBlock Text="{Binding FormTotalAmount, StringFormat='Total Debit Note Amount: {0:C2}'}"
-                                           FontWeight="Bold"
-                                           FontSize="15"
-                                           Foreground="{StaticResource Brush.Primary}"
-                                           HorizontalAlignment="Right" />
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="Total Debit Note Amount: "
+                                               FontWeight="Bold"
+                                               FontSize="15"
+                                               Foreground="{StaticResource Brush.Primary}" />
+                                    <TextBlock Text="{Binding FormTotalAmount, Converter={StaticResource CurrencyConverter}}"
+                                               FontWeight="Bold"
+                                               FontSize="15"
+                                               Foreground="{StaticResource Brush.Primary}" />
+                                </StackPanel>
                             </Border>
 
                             <Border Background="#FDE8E8"
@@ -366,7 +371,7 @@
                                     <TextBlock Text="{Binding SelectedReturnDetails.OriginalPurchaseInvoiceNumber}" FontWeight="SemiBold" FontSize="13" Margin="0,2,0,8" />
 
                                     <TextBlock Text="Total Amount:" FontWeight="SemiBold" FontSize="11" Foreground="{StaticResource Brush.Text.Muted}" />
-                                    <TextBlock Text="{Binding SelectedReturnDetails.TotalAmount, StringFormat={}{0:C2}}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource Brush.Primary}" />
+                                    <TextBlock Text="{Binding SelectedReturnDetails.TotalAmount, Converter={StaticResource Money}}" FontWeight="Bold" FontSize="15" Foreground="{StaticResource Brush.Primary}" />
                                 </StackPanel>
                             </Grid>
 
@@ -380,8 +385,8 @@
                                     <DataGridTextColumn Header="Product" Binding="{Binding ProductName}" Width="*" />
                                     <DataGridTextColumn Header="Batch" Binding="{Binding BatchNumber}" Width="110" />
                                     <DataGridTextColumn Header="Qty Returned" Binding="{Binding Quantity, StringFormat={}{0:N2}}" Width="90" FontWeight="Bold" />
-                                    <DataGridTextColumn Header="Return Rate" Binding="{Binding ReturnRate, StringFormat={}{0:C2}}" Width="90" />
-                                    <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, StringFormat={}{0:C2}}" Width="100" FontWeight="SemiBold" />
+                                    <DataGridTextColumn Header="Return Rate" Binding="{Binding ReturnRate, Converter={StaticResource Money}}" Width="90" />
+                                    <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, Converter={StaticResource Money}}" Width="100" FontWeight="SemiBold" />
                                 </DataGrid.Columns>
                             </DataGrid>
                         </StackPanel>

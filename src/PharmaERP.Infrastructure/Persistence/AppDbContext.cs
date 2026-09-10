@@ -30,6 +30,16 @@ public class AppDbContext : DbContext
     public DbSet<SaleReturnBatchAllocation> SaleReturnBatchAllocations => Set<SaleReturnBatchAllocation>();
     public DbSet<AppConfig> AppConfigs => Set<AppConfig>();
     public DbSet<PharmaERP.Infrastructure.Persistence.Entities.DocumentSequence> DocumentSequences => Set<PharmaERP.Infrastructure.Persistence.Entities.DocumentSequence>();
+    public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
+    public DbSet<JournalEntryLine> JournalEntryLines => Set<JournalEntryLine>();
+    public DbSet<ReceiptVoucher> ReceiptVouchers => Set<ReceiptVoucher>();
+    public DbSet<PaymentVoucher> PaymentVouchers => Set<PaymentVoucher>();
+    public DbSet<JournalVoucher> JournalVouchers => Set<JournalVoucher>();
+    public DbSet<OpeningBalanceVoucher> OpeningBalanceVouchers => Set<OpeningBalanceVoucher>();
+    public DbSet<ContraVoucher> ContraVouchers => Set<ContraVoucher>();
+    public DbSet<ReceiptVoucherAllocation> ReceiptVoucherAllocations => Set<ReceiptVoucherAllocation>();
+    public DbSet<PaymentVoucherAllocation> PaymentVoucherAllocations => Set<PaymentVoucherAllocation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -8,5 +8,8 @@ public interface IAppConfigRepository
     Task SetValueAsync(string key, string value, string? description = null, CancellationToken cancellationToken = default);
     Task<BusinessProfileDto> GetBusinessProfileAsync(CancellationToken cancellationToken = default);
     Task SaveBusinessProfileAsync(BusinessProfileDto profile, CancellationToken cancellationToken = default);
+    Task<RegionalSettingsDto> GetRegionalSettingsAsync(CancellationToken cancellationToken = default);
+    Task SaveRegionalSettingsAsync(RegionalSettingsDto settings, CancellationToken cancellationToken = default);
+    Task<bool> HasPostedFinancialTransactionsAsync(CancellationToken cancellationToken = default);
 }
 

@@ -139,7 +139,7 @@
                                                 Width="140" />
 
                             <DataGridTextColumn Header="Credit Limit"
-                                                Binding="{Binding CreditLimit, StringFormat={}{0:C2}}"
+                                                Binding="{Binding CreditLimit, Converter={StaticResource Money}}"
                                                 Width="130" />
 
                             <DataGridTemplateColumn Header="Status" Width="100">

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using PharmaERP.Application.DTOs;
 using PharmaERP.Application.Services;
 using PharmaERP.Desktop.Common;
+using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
@@ -218,7 +219,7 @@ public class SalesReturnsViewModel : ViewModelBase
             };
 
             var posted = await _returnService.PostReturnAsync(createDto);
-            StatusMessage = $"Return posted successfully! Return #{posted.ReturnNumber} for Rs. {posted.TotalAmount:N2}";
+            StatusMessage = $"Return posted successfully! Return #{posted.ReturnNumber} for {AppCurrency.Format(posted.TotalAmount)}";
             IsError = false;
 
             // Reset return form

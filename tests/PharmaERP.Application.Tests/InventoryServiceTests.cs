@@ -36,6 +36,9 @@ public class InventoryServiceTests
 
         public Task<PagedResult<ExpiryReportItemDto>> GetExpiryReportPagedAsync(PaginationQuery query, int nearExpiryDaysThreshold = 90, string? filterStatus = null, CancellationToken cancellationToken = default) =>
             Task.FromResult(new PagedResult<ExpiryReportItemDto>([], 0, 1, 20));
+
+        public Task<decimal> GetTotalInventoryValuationAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Batches.Sum(b => b.InventoryValue));
     }
 
     private class FakeStockMovementRepo : IStockMovementRepository

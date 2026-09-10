@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PharmaERP.Application.Common.Interfaces;
 using PharmaERP.Infrastructure.Persistence;
 using PharmaERP.Infrastructure.Persistence.Repositories;
+using PharmaERP.Infrastructure.Security;
 
 namespace PharmaERP.Infrastructure;
 
@@ -19,9 +20,15 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddInfrastructureServices(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        string? explicitConnectionString = null)
     {
-        var connectionString = ResolveConnectionString(configuration);
+        // Core security and connection string factory
+        services.AddSingleton<ICredentialProtector, DpapiCredentialProtector>();
+        services.AddSingleton<IConnectionStringFactory, SqlConnectionStringFactory>();
+        services.AddSingleton<IDatabaseConfigStore, WorkstationDatabaseConfigStore>();
+
+        var connectionString = explicitConnectionString ?? ResolveConnectionString(configuration);
 
         services.AddPooledDbContextFactory<AppDbContext>(options =>
         {
@@ -60,6 +67,15 @@ public static class DependencyInjection
         services.AddTransient<ISaleReturnRepository, SaleReturnRepository>();
         services.AddTransient<ISaleTransactionWriter, Persistence.Services.SaleTransactionWriter>();
 
+        // Milestone 5 Accounting Persistence & Services
+        services.AddTransient<IAccountRepository, AccountRepository>();
+        services.AddTransient<IJournalRepository, JournalRepository>();
+        services.AddTransient<IVoucherRepository, VoucherRepository>();
+        services.AddTransient<ISettlementRepository, SettlementRepository>();
+        services.AddTransient<Application.Interfaces.IAccountingOperationalGate, Persistence.Services.AccountingOperationalGate>();
+        services.AddTransient<IAccountingTransactionWriter, Persistence.Services.AccountingTransactionWriter>();
+        services.AddTransient<IHistoricalBackfillRunner, Persistence.Services.HistoricalBackfillRunner>();
+
         return services;
     }
 
@@ -68,25 +84,16 @@ public static class DependencyInjection
         // 1. Check local user settings file under %LocalAppData%\PharmaERP\settings.json
         try
         {
-            var userSettingsPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "PharmaERP",
-                "settings.json");
-
-            if (File.Exists(userSettingsPath))
+            var store = new WorkstationDatabaseConfigStore();
+            var config = store.LoadConfig();
+            if (config != null && !string.IsNullOrWhiteSpace(config.ActiveProfile))
             {
-                var json = File.ReadAllText(userSettingsPath);
-                using var doc = JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("ActiveProfile", out var prop) &&
-                    !string.IsNullOrWhiteSpace(prop.GetString()))
-                {
-                    return prop.GetString()!;
-                }
+                return config.ActiveProfile;
             }
         }
         catch
         {
-            // Ignore failure reading local user settings and fallback to appsettings
+            // Fall back to configuration
         }
 
         // 2. Fallback to appsettings.json
@@ -102,7 +109,24 @@ public static class DependencyInjection
             return envOverride;
         }
 
-        // 2. Resolve based on active profile (Development, Local, LAN)
+        // 2. Check canonical workstation settings in %LocalAppData%\PharmaERP\settings.json
+        try
+        {
+            var store = new WorkstationDatabaseConfigStore();
+            var config = store.LoadConfig();
+            if (config != null && config.IsConfigured)
+            {
+                var protector = new DpapiCredentialProtector();
+                var factory = new SqlConnectionStringFactory(protector);
+                return factory.BuildConnectionString(config);
+            }
+        }
+        catch
+        {
+            // Fall back to configuration
+        }
+
+        // 3. Resolve based on active profile (Development, Local, LAN) in appsettings.json
         var activeProfile = ResolveActiveProfile(configuration);
         var profileConnection = configuration[$"DatabaseConfig:Profiles:{activeProfile}:ConnectionString"];
         if (!string.IsNullOrWhiteSpace(profileConnection))
@@ -110,7 +134,7 @@ public static class DependencyInjection
             return profileConnection;
         }
 
-        // 3. Fallback to default connection string
+        // 4. Fallback to default connection string in appsettings.json
         var defaultConnection = configuration.GetConnectionString("DefaultConnection");
         if (!string.IsNullOrWhiteSpace(defaultConnection))
         {

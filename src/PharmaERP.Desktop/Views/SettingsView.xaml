@@ -9,6 +9,7 @@
              d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}">
 
     <UserControl.Resources>
+        <conv:InverseBooleanConverter x:Key="InverseBool" />
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
         <conv:NullToVisibilityConverter x:Key="NullToVis" />
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
@@ -43,12 +44,19 @@
                                    Style="{StaticResource Text.Subheading}"
                                    VerticalAlignment="Center" />
 
-                        <Button Grid.Column="1"
-                                Style="{StaticResource Button.Outline}"
-                                Content="Test Active Connection"
-                                Command="{Binding TestActiveConnectionCommand}"
-                                Padding="12,6"
-                                FontSize="12" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource Button.Outline}"
+                                    Content="Database Setup Wizard"
+                                    Command="{Binding OpenSetupWizardCommand}"
+                                    Padding="12,6"
+                                    FontSize="12"
+                                    Margin="0,0,8,0" />
+                            <Button Style="{StaticResource Button.Outline}"
+                                    Content="Test Active Connection"
+                                    Command="{Binding TestActiveConnectionCommand}"
+                                    Padding="12,6"
+                                    FontSize="12" />
+                        </StackPanel>
                     </Grid>
 
                     <Grid>
@@ -215,7 +223,149 @@
                 </StackPanel>
             </Border>
 
-            <!-- 3. DATABASE SCHEMA INITIALIZATION / UPGRADE CARD -->
+            <!-- 3. COMPANY BASE CURRENCY & REGIONAL SETTINGS CARD -->
+            <Border Style="{StaticResource Card.Default}" Margin="0,0,0,20">
+                <StackPanel>
+                    <Grid Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Company Base Currency &amp; Regional Settings"
+                                   Style="{StaticResource Text.Subheading}"
+                                   VerticalAlignment="Center" />
+
+                        <!-- Lock Badge -->
+                        <Border Grid.Column="1"
+                                CornerRadius="4"
+                                Padding="10,4"
+                                Background="{StaticResource Brush.Surface.Muted}">
+                            <TextBlock FontSize="11" FontWeight="Bold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="🔒 BASE CURRENCY LOCKED" />
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBaseCurrencyLocked}" Value="False">
+                                                <Setter Property="Text" Value="🔓 CONFIGURABLE (Pre-Transaction Stage)" />
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Status.Warning}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Text="Authoritative company accounting configuration. Once financial transactions are posted in the ledger, the base currency is locked to preserve double-entry audit integrity."
+                               Foreground="{StaticResource Brush.Text.Secondary}"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,16" />
+
+                    <!-- Lock explanation if locked -->
+                    <Border Background="{StaticResource Brush.Surface.Muted}"
+                            BorderBrush="{StaticResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Padding="12"
+                            Margin="0,0,0,16"
+                            Visibility="{Binding IsBaseCurrencyLocked, Converter={StaticResource BoolToVis}}">
+                        <TextBlock Text="ℹ Posted general ledger journal entries exist in this database. Base currency is permanently locked to protect accounting history."
+                                   FontSize="12"
+                                   Foreground="{StaticResource Brush.Text.Secondary}" />
+                    </Border>
+
+                    <Grid Margin="0,0,0,16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="360" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Base Currency Selector -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Company Base Currency:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,0,12" />
+                        <ComboBox Grid.Row="0" Grid.Column="1"
+                                  ItemsSource="{Binding CuratedCurrencies}"
+                                  SelectedItem="{Binding SelectedCurrency}"
+                                  IsEnabled="{Binding IsBaseCurrencyLocked, Converter={StaticResource InverseBool}}"
+                                  Height="34"
+                                  Margin="0,0,0,12">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock FontWeight="SemiBold">
+                                        <Run Text="{Binding CurrencyCode, Mode=OneWay}" />
+                                        <Run Text=" — " />
+                                        <Run Text="{Binding CurrencyName, Mode=OneWay}" FontWeight="Normal" />
+                                        <Run Text="{Binding Symbol, StringFormat=' ({0})', Mode=OneWay}" FontWeight="Bold" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <!-- Currency Live Preview -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Monetary Display Preview:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,0,12" />
+                        <Border Grid.Row="1" Grid.Column="1"
+                                Background="{StaticResource Brush.Surface.Muted}"
+                                BorderBrush="{StaticResource Brush.Border}"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="10,6"
+                                Margin="0,0,0,12">
+                            <TextBlock Text="{Binding SampleAmountFormatted}"
+                                       FontWeight="Bold"
+                                       FontSize="14"
+                                       Foreground="{StaticResource Brush.Primary}" />
+                        </Border>
+
+                        <!-- Workstation Language -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Workstation Language:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,0,12" />
+                        <ComboBox Grid.Row="2" Grid.Column="1"
+                                  ItemsSource="{Binding SupportedLanguages}"
+                                  SelectedItem="{Binding SelectedLanguage}"
+                                  Height="34"
+                                  Margin="0,0,0,12">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding NativeName, Mode=OneWay}" FontWeight="Bold" />
+                                        <Run Text="{Binding EnglishName, StringFormat=' ({0})', Mode=OneWay}" Foreground="{StaticResource Brush.Text.Secondary}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+
+                    <Button Style="{StaticResource Button.Primary}"
+                            Content="Save Regional &amp; Language Settings"
+                            Command="{Binding SaveRegionalSettingsCommand}"
+                            Padding="16,8"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,10" />
+
+                    <!-- Regional Save Feedback -->
+                    <Border Background="{StaticResource Brush.Status.Success.Bg}"
+                            BorderBrush="{StaticResource Brush.Status.Success}"
+                            BorderThickness="1"
+                            CornerRadius="5"
+                            Padding="10"
+                            Margin="0,4,0,0"
+                            Visibility="{Binding RegionalSaveMessage, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding RegionalSaveMessage}"
+                                   Foreground="{StaticResource Brush.Status.Success}"
+                                   FontSize="12" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- 4. DATABASE SCHEMA INITIALIZATION / UPGRADE CARD -->
             <Border Style="{StaticResource Card.Default}">
                 <StackPanel>
                     <TextBlock Text="Database Schema Migration &amp; Upgrade"

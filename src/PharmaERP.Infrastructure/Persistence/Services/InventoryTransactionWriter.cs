@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using PharmaERP.Application.Common.Exceptions;
 using PharmaERP.Application.Common.Interfaces;
 using PharmaERP.Application.DTOs;
+using PharmaERP.Application.Interfaces;
 using PharmaERP.Domain.Entities;
 using PharmaERP.Infrastructure.Persistence.Helpers;
 
@@ -14,13 +15,19 @@ namespace PharmaERP.Infrastructure.Persistence.Services;
 public class InventoryTransactionWriter : IInventoryTransactionWriter
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private readonly IAccountingOperationalGate _accountingGate;
+    private readonly IAccountingTransactionWriter _accountingTransactionWriter;
     private readonly ILogger<InventoryTransactionWriter> _logger;
 
     public InventoryTransactionWriter(
         IDbContextFactory<AppDbContext> contextFactory,
+        IAccountingOperationalGate accountingGate,
+        IAccountingTransactionWriter accountingTransactionWriter,
         ILogger<InventoryTransactionWriter> logger)
     {
         _contextFactory = contextFactory;
+        _accountingGate = accountingGate;
+        _accountingTransactionWriter = accountingTransactionWriter;
         _logger = logger;
     }
 
@@ -48,6 +55,7 @@ public class InventoryTransactionWriter : IInventoryTransactionWriter
 
         string normalizedBatch = rawBatch.ToUpperInvariant();
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var product = await context.Products
@@ -178,6 +186,8 @@ public class InventoryTransactionWriter : IInventoryTransactionWriter
 
             await context.StockMovements.AddAsync(movement, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
+
+            await _accountingTransactionWriter.PostOpeningStockJournalAsync(context, movement, cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
 

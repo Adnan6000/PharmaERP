@@ -362,14 +362,27 @@ public class PurchaseEntryViewModel : ViewModelBase
         try
         {
             var supps = await _supplierService.GetActiveLookupsAsync(ct);
-            _suppliers.Clear();
-            foreach (var s in supps) _suppliers.Add(s);
-
             var prods = await _productService.GetProductsPagedAsync(new PaginationQuery { PageNumber = 1, PageSize = 1000 }, null, ct);
-            _products.Clear();
-            foreach (var p in prods.Items.Where(x => x.IsActive))
+
+            void ApplyLookups()
             {
-                _products.Add(new LookupDto(p.Id, p.Name, p.ProductCode));
+                _suppliers.Clear();
+                foreach (var s in supps) _suppliers.Add(s);
+
+                _products.Clear();
+                foreach (var p in prods.Items.Where(x => x.IsActive))
+                {
+                    _products.Add(new LookupDto(p.Id, p.Name, p.ProductCode));
+                }
+            }
+
+            if (System.Windows.Application.Current?.Dispatcher != null && !System.Windows.Application.Current.Dispatcher.CheckAccess())
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(ApplyLookups);
+            }
+            else
+            {
+                ApplyLookups();
             }
         }
         catch (Exception ex)
@@ -517,7 +530,7 @@ public class PurchaseEntryViewModel : ViewModelBase
         {
             var invoice = await _purchaseService.CreateAndPostPurchaseInvoiceAsync(dto, ct);
             IsSuccess = true;
-            StatusMessage = $"Purchase Invoice {invoice.InvoiceNumber} successfully posted! Total: {invoice.NetTotal:C2}";
+            StatusMessage = $"Purchase Invoice {invoice.InvoiceNumber} successfully posted! Total: {AppCurrency.Format(invoice.NetTotal)}";
             ResetAll();
         }
         catch (DuplicateKeyException ex)

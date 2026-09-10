@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+
+  <!-- Navigation / Modules -->
+  <data name="Nav_Dashboard" xml:space="preserve"><value>ڈیش بورڈ</value></data>
+  <data name="Nav_POS" xml:space="preserve"><value>پوائنٹ آف سیلز (POS)</value></data>
+  <data name="Nav_Sales" xml:space="preserve"><value>سیلز انوائسز</value></data>
+  <data name="Nav_SalesReturns" xml:space="preserve"><value>سیلز واپسی</value></data>
+  <data name="Nav_Products" xml:space="preserve"><value>ادویات و کیٹلاگ</value></data>
+  <data name="Nav_Inventory" xml:space="preserve"><value>اسٹاک و انوینٹری</value></data>
+  <data name="Nav_OpeningStock" xml:space="preserve"><value>ابتدائی اسٹاک</value></data>
+  <data name="Nav_Purchases" xml:space="preserve"><value>خریداری کی تفصیل</value></data>
+  <data name="Nav_PurchaseEntry" xml:space="preserve"><value>خریداری کا اندراج</value></data>
+  <data name="Nav_PurchaseReturns" xml:space="preserve"><value>خریداری واپسی</value></data>
+  <data name="Nav_Customers" xml:space="preserve"><value>گاہک (کسٹمرز)</value></data>
+  <data name="Nav_Suppliers" xml:space="preserve"><value>سپلائرز</value></data>
+  <data name="Nav_Manufacturers" xml:space="preserve"><value>ادویات ساز کمپنیاں</value></data>
+  <data name="Nav_Categories" xml:space="preserve"><value>زمرہ جات (کیٹیگریز)</value></data>
+  <data name="Nav_Units" xml:space="preserve"><value>پیمائش کی اکائیاں</value></data>
+  <data name="Nav_COA" xml:space="preserve"><value>کھاتوں کی فہرست (چارٹ آف اکاؤنٹس)</value></data>
+  <data name="Nav_Vouchers" xml:space="preserve"><value>مالیاتی واؤچرز</value></data>
+  <data name="Nav_Ledgers" xml:space="preserve"><value>کھاتہ جات و رپورٹس</value></data>
+  <data name="Nav_AccountingSetup" xml:space="preserve"><value>اکاؤنٹنگ سیٹ اپ</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>ترتیبات (سیٹنگز)</value></data>
+
+  <!-- Common Labels and Actions -->
+  <data name="Common_Save" xml:space="preserve"><value>محفوظ کریں</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>منسوخ کریں</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>حذف کریں</value></data>
+  <data name="Common_Refresh" xml:space="preserve"><value>تازہ کریں</value></data>
+  <data name="Common_Search" xml:space="preserve"><value>تلاش کریں</value></data>
+  <data name="Common_Print" xml:space="preserve"><value>پرنٹ کریں</value></data>
+  <data name="Common_TotalPayable" xml:space="preserve"><value>کل واجب الادا</value></data>
+  <data name="Common_CashTendered" xml:space="preserve"><value>وصول شدہ رقم</value></data>
+  <data name="Common_ChangeReturned" xml:space="preserve"><value>بقایا رقم</value></data>
+  <data name="Common_GrossTotal" xml:space="preserve"><value>مجموعی رقم</value></data>
+  <data name="Common_NetTotal" xml:space="preserve"><value>خالص رقم</value></data>
+  <data name="Common_Discount" xml:space="preserve"><value>رعایت (ڈسکاؤنٹ)</value></data>
+  <data name="Common_Status" xml:space="preserve"><value>کیفیت</value></data>
+  <data name="Common_Date" xml:space="preserve"><value>تاریخ</value></data>
+  <data name="Common_Reference" xml:space="preserve"><value>حوالہ</value></data>
+  <data name="Common_Narration" xml:space="preserve"><value>تفصیل / وضاحت</value></data>
+  <data name="Common_Debit" xml:space="preserve"><value>بنام (ڈیبٹ)</value></data>
+  <data name="Common_Credit" xml:space="preserve"><value>جمع (کریڈٹ)</value></data>
+  <data name="Common_Balance" xml:space="preserve"><value>بقایا بیلنس</value></data>
+  <data name="Common_Active" xml:space="preserve"><value>فعال</value></data>
+  <data name="Common_Inactive" xml:space="preserve"><value>غیر فعال</value></data>
+</root>
+

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms</value>
+  </resheader>
+
+  <!-- Navigation / Modules -->
+  <data name="Nav_Dashboard" xml:space="preserve"><value>Dashboard</value></data>
+  <data name="Nav_POS" xml:space="preserve"><value>Point of Sale (POS)</value></data>
+  <data name="Nav_Sales" xml:space="preserve"><value>Sales Invoices</value></data>
+  <data name="Nav_SalesReturns" xml:space="preserve"><value>Sales Returns</value></data>
+  <data name="Nav_Products" xml:space="preserve"><value>Medicine Catalog</value></data>
+  <data name="Nav_Inventory" xml:space="preserve"><value>Stock &amp; Inventory</value></data>
+  <data name="Nav_OpeningStock" xml:space="preserve"><value>Opening Stock</value></data>
+  <data name="Nav_Purchases" xml:space="preserve"><value>Purchases History</value></data>
+  <data name="Nav_PurchaseEntry" xml:space="preserve"><value>Purchase Entry</value></data>
+  <data name="Nav_PurchaseReturns" xml:space="preserve"><value>Purchase Returns</value></data>
+  <data name="Nav_Customers" xml:space="preserve"><value>Customers</value></data>
+  <data name="Nav_Suppliers" xml:space="preserve"><value>Suppliers</value></data>
+  <data name="Nav_Manufacturers" xml:space="preserve"><value>Manufacturers</value></data>
+  <data name="Nav_Categories" xml:space="preserve"><value>Categories</value></data>
+  <data name="Nav_Units" xml:space="preserve"><value>Units of Measure</value></data>
+  <data name="Nav_COA" xml:space="preserve"><value>Chart of Accounts</value></data>
+  <data name="Nav_Vouchers" xml:space="preserve"><value>Vouchers</value></data>
+  <data name="Nav_Ledgers" xml:space="preserve"><value>Ledgers &amp; Financials</value></data>
+  <data name="Nav_AccountingSetup" xml:space="preserve"><value>Accounting Setup</value></data>
+  <data name="Nav_Settings" xml:space="preserve"><value>Settings</value></data>
+
+  <!-- Common Labels and Actions -->
+  <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Common_Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Common_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Common_Print" xml:space="preserve"><value>Print</value></data>
+  <data name="Common_TotalPayable" xml:space="preserve"><value>Total Payable</value></data>
+  <data name="Common_CashTendered" xml:space="preserve"><value>Cash Tendered</value></data>
+  <data name="Common_ChangeReturned" xml:space="preserve"><value>Change Returned</value></data>
+  <data name="Common_GrossTotal" xml:space="preserve"><value>Gross Total</value></data>
+  <data name="Common_NetTotal" xml:space="preserve"><value>Net Total</value></data>
+  <data name="Common_Discount" xml:space="preserve"><value>Discount</value></data>
+  <data name="Common_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Common_Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Common_Reference" xml:space="preserve"><value>Reference</value></data>
+  <data name="Common_Narration" xml:space="preserve"><value>Narration</value></data>
+  <data name="Common_Debit" xml:space="preserve"><value>Debit</value></data>
+  <data name="Common_Credit" xml:space="preserve"><value>Credit</value></data>
+  <data name="Common_Balance" xml:space="preserve"><value>Balance</value></data>
+  <data name="Common_Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Common_Inactive" xml:space="preserve"><value>Inactive</value></data>
+</root>
+

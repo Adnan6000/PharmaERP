@@ -4,6 +4,7 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using PharmaERP.Application.DTOs;
 using PharmaERP.Domain.Enums;
+using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.Services.FlowDocumentBuilders;
 
@@ -118,26 +119,26 @@ public static class ThermalReceiptDocumentBuilder
 
         // 4. Totals Block
         var pTotals = new Paragraph { TextAlignment = TextAlignment.Right, Margin = new Thickness(0, 2, 0, 4) };
-        pTotals.Inlines.Add(new Run($"Gross Total: {invoice.GrossTotal,8:N2}"));
+        pTotals.Inlines.Add(new Run($"Gross Total: {AppCurrency.Format(invoice.GrossTotal)}"));
         pTotals.Inlines.Add(new LineBreak());
 
         decimal totalDisc = invoice.LineDiscountTotal + invoice.InvoiceDiscountAmount;
         if (totalDisc > 0)
         {
-            pTotals.Inlines.Add(new Run($"Discount   : -{totalDisc,7:N2}"));
+            pTotals.Inlines.Add(new Run($"Discount   : -{AppCurrency.Format(totalDisc)}"));
             pTotals.Inlines.Add(new LineBreak());
         }
 
-        pTotals.Inlines.Add(new Run($"NET TOTAL  : {invoice.NetTotal,8:N2}") { FontWeight = FontWeights.Bold, FontSize = 11 });
+        pTotals.Inlines.Add(new Run($"NET TOTAL  : {AppCurrency.Format(invoice.NetTotal)}") { FontWeight = FontWeights.Bold, FontSize = 11 });
         pTotals.Inlines.Add(new LineBreak());
 
         if (invoice.TenderedAmount.HasValue)
         {
-            pTotals.Inlines.Add(new Run($"Tendered   : {invoice.TenderedAmount.Value,8:N2}"));
+            pTotals.Inlines.Add(new Run($"Tendered   : {AppCurrency.Format(invoice.TenderedAmount.Value)}"));
             pTotals.Inlines.Add(new LineBreak());
             if (invoice.ChangeGiven.HasValue)
             {
-                pTotals.Inlines.Add(new Run($"Change     : {invoice.ChangeGiven.Value,8:N2}"));
+                pTotals.Inlines.Add(new Run($"Change     : {AppCurrency.Format(invoice.ChangeGiven.Value)}"));
                 pTotals.Inlines.Add(new LineBreak());
             }
         }

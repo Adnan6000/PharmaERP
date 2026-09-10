@@ -55,5 +55,6 @@ public class SaleInvoice : BaseEntity
     public string? ReceiptFooterSnapshot { get; set; }
 
     public ICollection<SaleInvoiceItem> Items { get; set; } = new List<SaleInvoiceItem>();
+    public ICollection<ReceiptVoucherAllocation> Allocations { get; set; } = new List<ReceiptVoucherAllocation>();
 }
 

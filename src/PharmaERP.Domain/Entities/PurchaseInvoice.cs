@@ -48,5 +48,6 @@ public class PurchaseInvoice : BaseEntity
     public ICollection<PurchaseInvoiceItem> Items { get; set; } = new List<PurchaseInvoiceItem>();
 
     public ICollection<PurchaseReturn> Returns { get; set; } = new List<PurchaseReturn>();
+    public ICollection<PaymentVoucherAllocation> Allocations { get; set; } = new List<PaymentVoucherAllocation>();
 }
 

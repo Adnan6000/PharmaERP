@@ -17,5 +17,6 @@ public interface IProductBatchRepository
     Task<PagedResult<CurrentStockDto>> GetCurrentStockPagedAsync(PaginationQuery query, string? searchTerm = null, int? categoryId = null, int? manufacturerId = null, CancellationToken cancellationToken = default);
 
     Task<PagedResult<ExpiryReportItemDto>> GetExpiryReportPagedAsync(PaginationQuery query, int nearExpiryDaysThreshold = 90, string? filterStatus = null, CancellationToken cancellationToken = default);
+    Task<decimal> GetTotalInventoryValuationAsync(CancellationToken cancellationToken = default);
 }
 

@@ -83,9 +83,7 @@ public class SaleAndPosIntegrationTests : IAsyncLifetime
 
     private SaleTransactionWriter CreateWriter()
     {
-        var configRepo = new AppConfigRepository(_fixture.ContextFactory, NullLogger<AppConfigRepository>.Instance);
-        var clock = new BusinessClock(_fixture.ContextFactory, configRepo);
-        return new SaleTransactionWriter(_fixture.ContextFactory, configRepo, clock, NullLogger<SaleTransactionWriter>.Instance);
+        return _fixture.CreateSaleWriter();
     }
 
     [Fact]

@@ -1,0 +1,780 @@
+<UserControl x:Class="PharmaERP.Desktop.Views.VouchersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+             xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:VouchersViewModel}">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- MAIN CONTENT AREA -->
+        <Grid Margin="24,20">
+            <Grid.RowDefinitions>
+                <!-- Title & Tabs -->
+                <RowDefinition Height="Auto" />
+                <!-- Filter Bar -->
+                <RowDefinition Height="Auto" />
+                <!-- Error Banner -->
+                <RowDefinition Height="Auto" />
+                <!-- Data Grid -->
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Title & Sub-tabs -->
+            <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                <TextBlock Text="Financial Vouchers &amp; Settlements" Style="{StaticResource Text.Display}" />
+                <TextBlock Text="Cash/bank receipts, payments, contra transfers, journal adjustments, and invoice-level payment settlements."
+                           Foreground="{StaticResource Brush.Text.Secondary}" FontSize="13" Margin="0,4,0,12" />
+
+                <!-- Voucher Mode Tabs -->
+                <StackPanel Orientation="Horizontal">
+                    <RadioButton Content="📥 Receipt Vouchers (RV)"
+                                 GroupName="VoucherTabs"
+                                 IsChecked="True"
+                                 Command="{Binding SwitchTabCommand}"
+                                 CommandParameter="Receipt"
+                                 Margin="0,0,16,0"
+                                 FontWeight="SemiBold" />
+                    <RadioButton Content="📤 Payment Vouchers (PV)"
+                                 GroupName="VoucherTabs"
+                                 Command="{Binding SwitchTabCommand}"
+                                 CommandParameter="Payment"
+                                 Margin="0,0,16,0"
+                                 FontWeight="SemiBold" />
+                    <RadioButton Content="🔄 Contra Vouchers (CV)"
+                                 GroupName="VoucherTabs"
+                                 Command="{Binding SwitchTabCommand}"
+                                 CommandParameter="Contra"
+                                 Margin="0,0,16,0"
+                                 FontWeight="SemiBold" />
+                    <RadioButton Content="⚖️ Journal Vouchers (JV)"
+                                 GroupName="VoucherTabs"
+                                 Command="{Binding SwitchTabCommand}"
+                                 CommandParameter="Journal"
+                                 Margin="0,0,16,0"
+                                 FontWeight="SemiBold" />
+                    <RadioButton Content="🏁 Opening Balances (OB)"
+                                 GroupName="VoucherTabs"
+                                 Command="{Binding SwitchTabCommand}"
+                                 CommandParameter="OpeningBalance"
+                                 FontWeight="SemiBold" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Filter Toolbar -->
+            <Border Grid.Row="1" Style="{StaticResource Card.Default}" Padding="12" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="From:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <DatePicker SelectedDate="{Binding FromDate}" Width="130" Margin="0,0,16,0" />
+                        <TextBlock Text="To:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <DatePicker SelectedDate="{Binding ToDate}" Width="130" Margin="0,0,16,0" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="🔄 Refresh"
+                                Command="{Binding RefreshCommand}"
+                                Padding="12,6"
+                                Margin="0,0,8,0" />
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="🔗 Settle Invoices"
+                                Command="{Binding OpenSettlementDrawerCommand}"
+                                Padding="12,6"
+                                Margin="0,0,8,0" />
+                        <Button Style="{StaticResource Button.Outline}"
+                                Content="🚫 Cancel Voucher"
+                                Command="{Binding OpenCancelModalCommand}"
+                                Padding="12,6"
+                                Margin="0,0,8,0" />
+                        <Button Style="{StaticResource Button.Primary}"
+                                Content="+ Create Voucher"
+                                Command="{Binding OpenNewDrawerCommand}"
+                                Padding="14,6" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Error Banner -->
+            <Border Grid.Row="2"
+                    Background="{StaticResource Brush.Status.Error.Bg}"
+                    BorderBrush="{StaticResource Brush.Status.Error}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="12,8"
+                    Margin="0,0,0,12"
+                    Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVis}}">
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="12" />
+            </Border>
+
+            <!-- DataGrids (Conditionally Visible depending on ActiveTab) -->
+            <Border Grid.Row="3" Style="{StaticResource Card.Default}" Padding="0">
+                <Grid>
+                    <!-- Receipt Vouchers Grid -->
+                    <DataGrid ItemsSource="{Binding ReceiptVouchers}"
+                              SelectedItem="{Binding SelectedReceiptVoucher}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              RowHeight="36">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="Receipt">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="200" />
+                            <DataGridTextColumn Header="Deposit Account" Binding="{Binding CashOrBankAccountName}" Width="200" />
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Journal Ref" Binding="{Binding JournalNumber}" Width="150" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                            <DataGridTextColumn Header="Narration" Binding="{Binding Narration}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Payment Vouchers Grid -->
+                    <DataGrid ItemsSource="{Binding PaymentVouchers}"
+                              SelectedItem="{Binding SelectedPaymentVoucher}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              RowHeight="36">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="Payment">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Supplier" Binding="{Binding SupplierName}" Width="200" />
+                            <DataGridTextColumn Header="Payment From" Binding="{Binding CashOrBankAccountName}" Width="200" />
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Journal Ref" Binding="{Binding JournalNumber}" Width="150" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                            <DataGridTextColumn Header="Narration" Binding="{Binding Narration}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Contra Vouchers Grid -->
+                    <DataGrid ItemsSource="{Binding ContraVouchers}"
+                              SelectedItem="{Binding SelectedContraVoucher}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              RowHeight="36">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="Contra">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Transferred From" Binding="{Binding SourceAccountName}" Width="200" />
+                            <DataGridTextColumn Header="Transferred To" Binding="{Binding DestinationAccountName}" Width="200" />
+                            <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Journal Ref" Binding="{Binding JournalNumber}" Width="150" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                            <DataGridTextColumn Header="Narration" Binding="{Binding Narration}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Journal Vouchers Grid -->
+                    <DataGrid ItemsSource="{Binding JournalVouchers}"
+                              SelectedItem="{Binding SelectedJournalVoucher}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              RowHeight="36">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="Journal">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount, StringFormat='{}{0:N2}'}" Width="130" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Lines Count" Binding="{Binding Lines.Count}" Width="90" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                            <DataGridTextColumn Header="Narration" Binding="{Binding Narration}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Opening Balance Vouchers Grid -->
+                    <DataGrid ItemsSource="{Binding OpeningBalanceVouchers}"
+                              SelectedItem="{Binding SelectedOpeningBalanceVoucher}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              CanUserAddRows="False"
+                              GridLinesVisibility="Horizontal"
+                              BorderThickness="0"
+                              RowHeight="36">
+                        <DataGrid.Style>
+                            <Style TargetType="DataGrid">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="OpeningBalance">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DataGrid.Style>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Total Amount" Binding="{Binding TotalAmount, StringFormat='{}{0:N2}'}" Width="130" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Lines Count" Binding="{Binding Lines.Count}" Width="90" />
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                            <DataGridTextColumn Header="Narration" Binding="{Binding Narration}" Width="*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- DRAWERS OVERLAY -->
+        <!-- 1. NEW RECEIPT VOUCHER DRAWER -->
+        <Grid Visibility="{Binding IsNewRvDrawerOpen, Converter={StaticResource BoolToVis}}" Background="#66000000">
+            <Border Width="460" HorizontalAlignment="Right" Background="{StaticResource Brush.Surface}" Padding="24" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Border}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="New Receipt Voucher (RV)" Style="{StaticResource Text.Subheading}" Margin="0,0,0,16" />
+
+                        <Border Background="{StaticResource Brush.Status.Error.Bg}" BorderBrush="{StaticResource Brush.Status.Error}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12" Visibility="{Binding DrawerErrorMessage, Converter={StaticResource NullToVis}}">
+                            <TextBlock Text="{Binding DrawerErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="11" TextWrapping="Wrap" />
+                        </Border>
+
+                        <TextBlock Text="Date *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <DatePicker SelectedDate="{Binding RvDate}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Customer *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding RvCustomerId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Deposit Into (Cash / Bank) *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding RvCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Amount *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding RvAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Reference #" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding RvReference, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Narration" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding RvNarration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20" />
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="Cancel" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,8" />
+                            <Button Style="{StaticResource Button.Primary}" Content="Post Receipt" Command="{Binding SaveReceiptVoucherCommand}" Padding="16,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- 2. NEW PAYMENT VOUCHER DRAWER -->
+        <Grid Visibility="{Binding IsNewPvDrawerOpen, Converter={StaticResource BoolToVis}}" Background="#66000000">
+            <Border Width="460" HorizontalAlignment="Right" Background="{StaticResource Brush.Surface}" Padding="24" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Border}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="New Payment Voucher (PV)" Style="{StaticResource Text.Subheading}" Margin="0,0,0,16" />
+
+                        <Border Background="{StaticResource Brush.Status.Error.Bg}" BorderBrush="{StaticResource Brush.Status.Error}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12" Visibility="{Binding DrawerErrorMessage, Converter={StaticResource NullToVis}}">
+                            <TextBlock Text="{Binding DrawerErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="11" TextWrapping="Wrap" />
+                        </Border>
+
+                        <TextBlock Text="Date *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <DatePicker SelectedDate="{Binding PvDate}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Supplier (if Accounts Payable)" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding Suppliers}" SelectedValue="{Binding PvSupplierId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Paid From (Cash / Bank) *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding PvCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Amount *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding PvAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Reference #" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding PvReference, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Narration" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding PvNarration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20" />
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="Cancel" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,8" />
+                            <Button Style="{StaticResource Button.Primary}" Content="Post Payment" Command="{Binding SavePaymentVoucherCommand}" Padding="16,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- 3. NEW CONTRA VOUCHER DRAWER -->
+        <Grid Visibility="{Binding IsNewCvDrawerOpen, Converter={StaticResource BoolToVis}}" Background="#66000000">
+            <Border Width="460" HorizontalAlignment="Right" Background="{StaticResource Brush.Surface}" Padding="24" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Border}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <TextBlock Text="New Contra Voucher (CV)" Style="{StaticResource Text.Subheading}" Margin="0,0,0,16" />
+
+                        <Border Background="{StaticResource Brush.Status.Error.Bg}" BorderBrush="{StaticResource Brush.Status.Error}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12" Visibility="{Binding DrawerErrorMessage, Converter={StaticResource NullToVis}}">
+                            <TextBlock Text="{Binding DrawerErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="11" TextWrapping="Wrap" />
+                        </Border>
+
+                        <TextBlock Text="Date *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <DatePicker SelectedDate="{Binding CvDate}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Transfer From (Cash / Bank) *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding CvFromCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Transfer To (Cash / Bank) *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding CvToCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Amount *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding CvAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Reference #" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding CvReference, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+
+                        <TextBlock Text="Narration" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                        <TextBox Text="{Binding CvNarration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20" />
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="Cancel" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,8" />
+                            <Button Style="{StaticResource Button.Primary}" Content="Post Contra" Command="{Binding SaveContraVoucherCommand}" Padding="16,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- 4. NEW JOURNAL VOUCHER (JV) DRAWER -->
+        <Grid Visibility="{Binding IsNewJvDrawerOpen, Converter={StaticResource BoolToVis}}" Background="#66000000">
+            <Border Width="680" HorizontalAlignment="Right" Background="{StaticResource Brush.Surface}" Padding="24" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Border}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="New Journal Voucher (JV)" Style="{StaticResource Text.Subheading}" Margin="0,0,0,16" />
+
+                    <!-- Header fields -->
+                    <StackPanel Grid.Row="1">
+                        <Border Background="{StaticResource Brush.Status.Error.Bg}" BorderBrush="{StaticResource Brush.Status.Error}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12" Visibility="{Binding DrawerErrorMessage, Converter={StaticResource NullToVis}}">
+                            <TextBlock Text="{Binding DrawerErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="11" TextWrapping="Wrap" />
+                        </Border>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="Date *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                <DatePicker SelectedDate="{Binding JvDate}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                <TextBlock Text="Reference #" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding JvReference, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Narration" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding JvNarration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,8">
+                            <Button Style="{StaticResource Button.Outline}" Content="+ Add Line" Command="{Binding AddJvLineCommand}" Padding="10,4" FontSize="11" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Lines Table -->
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding JvLines}" AutoGenerateColumns="False" CanUserAddRows="False" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Account *" Width="220">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.AllAccounts, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SelectedValue="{Binding AccountId, UpdateSourceTrigger=PropertyChanged}"
+                                                  SelectedValuePath="Id"
+                                                  DisplayMemberPath="Name" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Debit (Dr)" Binding="{Binding Debit, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Width="100" />
+                            <DataGridTextColumn Header="Credit (Cr)" Binding="{Binding Credit, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Width="100" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                            <DataGridTemplateColumn Width="45">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="✕" Command="{Binding DataContext.RemoveJvLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Foreground="Red" Background="Transparent" BorderThickness="0" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Footer Totals & Buttons -->
+                    <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="Total Debit: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding JvTotalDebit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,16,0" />
+                                <TextBlock Text="Total Credit: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding JvTotalCredit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,16,0" />
+                                <TextBlock Text="Difference: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding JvDifference, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Status.Error}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="Cancel" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,8" />
+                            <Button Style="{StaticResource Button.Primary}" Content="Post Journal Voucher" Command="{Binding SaveJournalVoucherCommand}" Padding="16,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 5. NEW OPENING BALANCE DRAWER -->
+        <Grid Visibility="{Binding IsNewObDrawerOpen, Converter={StaticResource BoolToVis}}" Background="#66000000">
+            <Border Width="680" HorizontalAlignment="Right" Background="{StaticResource Brush.Surface}" Padding="24" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Border}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="New Opening Balance Voucher (OB)" Style="{StaticResource Text.Subheading}" Margin="0,0,0,16" />
+
+                    <!-- Header fields -->
+                    <StackPanel Grid.Row="1">
+                        <Border Background="{StaticResource Brush.Status.Error.Bg}" BorderBrush="{StaticResource Brush.Status.Error}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12" Visibility="{Binding DrawerErrorMessage, Converter={StaticResource NullToVis}}">
+                            <TextBlock Text="{Binding DrawerErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="11" TextWrapping="Wrap" />
+                        </Border>
+
+                        <Grid Margin="0,0,0,12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="Date *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                <DatePicker SelectedDate="{Binding ObDate}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                                <TextBlock Text="Reference #" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding ObReference, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Narration" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                <TextBox Text="{Binding ObNarration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,8">
+                            <Button Style="{StaticResource Button.Outline}" Content="+ Add Line" Command="{Binding AddObLineCommand}" Padding="10,4" FontSize="11" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Lines Table -->
+                    <DataGrid Grid.Row="2" ItemsSource="{Binding ObLines}" AutoGenerateColumns="False" CanUserAddRows="False" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Account *" Width="220">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.AllAccounts, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SelectedValue="{Binding AccountId, UpdateSourceTrigger=PropertyChanged}"
+                                                  SelectedValuePath="Id"
+                                                  DisplayMemberPath="Name" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Debit (Dr)" Binding="{Binding Debit, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Width="100" />
+                            <DataGridTextColumn Header="Credit (Cr)" Binding="{Binding Credit, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Width="100" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Width="*" />
+                            <DataGridTemplateColumn Width="45">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="✕" Command="{Binding DataContext.RemoveObLineCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Foreground="Red" Background="Transparent" BorderThickness="0" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Footer Totals & Buttons -->
+                    <StackPanel Grid.Row="3" Margin="0,16,0,0">
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="Total Debit: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding ObTotalDebit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,16,0" />
+                                <TextBlock Text="Total Credit: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding ObTotalCredit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,16,0" />
+                                <TextBlock Text="Difference: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding ObDifference, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Status.Error}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="Cancel" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,8" />
+                            <Button Style="{StaticResource Button.Primary}" Content="Post Opening Balances" Command="{Binding SaveOpeningBalanceVoucherCommand}" Padding="16,8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 6. INVOICE SETTLEMENT ALLOCATION DRAWER -->
+        <Grid Visibility="{Binding IsSettlementDrawerOpen, Converter={StaticResource BoolToVis}}" Background="#66000000">
+            <Border Width="750" HorizontalAlignment="Right" Background="{StaticResource Brush.Surface}" Padding="24" BorderThickness="1,0,0,0" BorderBrush="{StaticResource Brush.Border}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="{Binding SettlementTitle}" Style="{StaticResource Text.Subheading}" Margin="0,0,0,14" />
+
+                    <!-- Error Banner -->
+                    <Border Grid.Row="1" Background="{StaticResource Brush.Status.Error.Bg}" BorderBrush="{StaticResource Brush.Status.Error}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12" Visibility="{Binding DrawerErrorMessage, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding DrawerErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="11" TextWrapping="Wrap" />
+                    </Border>
+
+                    <!-- Content (Invoices Table & Existing Allocations) -->
+                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Sale Invoices for RV -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveTab}" Value="Receipt">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="Outstanding Customer Invoices" FontWeight="Bold" Margin="0,0,0,8" />
+                                <DataGrid ItemsSource="{Binding OpenSaleInvoices}" SelectedItem="{Binding SelectedSaleInvoice}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MaxHeight="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="150" FontWeight="SemiBold" />
+                                        <DataGridTextColumn Header="Date" Binding="{Binding BusinessDate, StringFormat='yyyy-MM-dd'}" Width="100" />
+                                        <DataGridTextColumn Header="Net Total" Binding="{Binding NetTotal, StringFormat='{}{0:N2}'}" Width="110" />
+                                        <DataGridTextColumn Header="Allocated" Binding="{Binding TotalAllocated, StringFormat='{}{0:N2}'}" Width="110" />
+                                        <DataGridTextColumn Header="Outstanding" Binding="{Binding OutstandingBalance, StringFormat='{}{0:N2}'}" Width="120" FontWeight="Bold" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+
+                            <!-- Purchase Invoices for PV -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveTab}" Value="Payment">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="Outstanding Supplier Invoices" FontWeight="Bold" Margin="0,0,0,8" />
+                                <DataGrid ItemsSource="{Binding OpenPurchaseInvoices}" SelectedItem="{Binding SelectedPurchaseInvoice}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MaxHeight="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="150" FontWeight="SemiBold" />
+                                        <DataGridTextColumn Header="Date" Binding="{Binding InvoiceDate, StringFormat='yyyy-MM-dd'}" Width="100" />
+                                        <DataGridTextColumn Header="Net Total" Binding="{Binding NetTotal, StringFormat='{}{0:N2}'}" Width="110" />
+                                        <DataGridTextColumn Header="Allocated" Binding="{Binding TotalAllocated, StringFormat='{}{0:N2}'}" Width="110" />
+                                        <DataGridTextColumn Header="Outstanding" Binding="{Binding OutstandingBalance, StringFormat='{}{0:N2}'}" Width="120" FontWeight="Bold" />
+                                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="90" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+
+                            <!-- Allocation Input Form -->
+                            <Border Background="{StaticResource Brush.Surface.Muted}" Padding="16" Margin="0,16,0,16" CornerRadius="4">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Settlement Amount *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                        <TextBox Text="{Binding SettlementAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Style="{StaticResource Form.Input}" Width="200" HorizontalAlignment="Left" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource Button.Primary}" Content="🔗 Apply Allocation" Command="{Binding SaveSettlementAllocationCommand}" VerticalAlignment="Bottom" Padding="16,8" />
+                                </Grid>
+                            </Border>
+
+                            <!-- Existing Allocations Table -->
+                            <TextBlock Text="Current Allocations for this Voucher" FontWeight="Bold" Margin="0,0,0,6" />
+                            <TextBlock Text="To void an allocation, enter a reason below and click Void on the active row. Historical records are preserved for audit." Foreground="{StaticResource Brush.Text.Secondary}" FontSize="12" Margin="0,0,0,8" />
+
+                            <Border Background="{StaticResource Brush.Surface.Muted}" Padding="12" Margin="0,0,0,12" CornerRadius="4">
+                                <StackPanel>
+                                    <TextBlock Text="Reason to Void Allocation *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding AllocationVoidReason, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" />
+                                </StackPanel>
+                            </Border>
+
+                            <DataGrid ItemsSource="{Binding RvAllocations}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MaxHeight="220">
+                                <DataGrid.Style>
+                                    <Style TargetType="DataGrid">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveTab}" Value="Receipt">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.Style>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="130" FontWeight="SemiBold" />
+                                    <DataGridTextColumn Header="Allocated Amount" Binding="{Binding AllocatedAmount, StringFormat='{}{0:N2}'}" Width="110" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80" />
+                                    <DataGridTextColumn Header="Allocated Date" Binding="{Binding AllocatedAtUtc, StringFormat='yyyy-MM-dd HH:mm'}" Width="120" />
+                                    <DataGridTextColumn Header="Void Reason" Binding="{Binding VoidReason}" Width="*" />
+                                    <DataGridTemplateColumn Header="Action" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Void"
+                                                        Command="{Binding DataContext.VoidReceiptAllocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="8,2"
+                                                        FontSize="11" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <DataGrid ItemsSource="{Binding PvAllocations}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MaxHeight="220">
+                                <DataGrid.Style>
+                                    <Style TargetType="DataGrid">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ActiveTab}" Value="Payment">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.Style>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Invoice #" Binding="{Binding InvoiceNumber}" Width="130" FontWeight="SemiBold" />
+                                    <DataGridTextColumn Header="Allocated Amount" Binding="{Binding AllocatedAmount, StringFormat='{}{0:N2}'}" Width="110" FontWeight="Bold" />
+                                    <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="80" />
+                                    <DataGridTextColumn Header="Allocated Date" Binding="{Binding AllocatedAtUtc, StringFormat='yyyy-MM-dd HH:mm'}" Width="120" />
+                                    <DataGridTextColumn Header="Void Reason" Binding="{Binding VoidReason}" Width="*" />
+                                    <DataGridTemplateColumn Header="Action" Width="80">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Void"
+                                                        Command="{Binding DataContext.VoidPaymentAllocationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Padding="8,2"
+                                                        FontSize="11" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                        <Button Style="{StaticResource Button.Outline}" Content="Done / Close" Command="{Binding CloseDrawerCommand}" Padding="16,8" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 7. CANCEL VOUCHER MODAL -->
+        <Grid Visibility="{Binding IsCancelDrawerOpen, Converter={StaticResource BoolToVis}}" Background="#66000000">
+            <Border Width="420" VerticalAlignment="Center" HorizontalAlignment="Center" Background="{StaticResource Brush.Surface}" Padding="24" CornerRadius="8" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}">
+                <StackPanel>
+                    <TextBlock Text="Cancel Voucher" Style="{StaticResource Text.Subheading}" Foreground="{StaticResource Brush.Status.Error}" Margin="0,0,0,12" />
+                    <TextBlock Text="Cancelling this voucher will atomically post an immutable reversal journal entry to General Ledger." Foreground="{StaticResource Brush.Text.Secondary}" FontSize="12" Margin="0,0,0,14" TextWrapping="Wrap" />
+
+                    <Border Background="{StaticResource Brush.Status.Error.Bg}" BorderBrush="{StaticResource Brush.Status.Error}" BorderThickness="1" CornerRadius="4" Padding="10" Margin="0,0,0,12" Visibility="{Binding DrawerErrorMessage, Converter={StaticResource NullToVis}}">
+                        <TextBlock Text="{Binding DrawerErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="11" TextWrapping="Wrap" />
+                    </Border>
+
+                    <TextBlock Text="Reason for Cancellation *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                    <TextBox Text="{Binding CancelReason, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,16" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Style="{StaticResource Button.Outline}" Content="Close" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,6" />
+                        <Button Style="{StaticResource Button.Danger}" Content="Confirm Cancel" Command="{Binding ConfirmCancelCommand}" Padding="16,6" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

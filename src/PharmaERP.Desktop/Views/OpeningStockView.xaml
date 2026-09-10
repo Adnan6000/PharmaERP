@@ -106,7 +106,7 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="Calculated Inventory Valuation" FontWeight="SemiBold" Margin="0,0,0,4" />
                         <Border Background="{StaticResource Brush.Surface.Muted}" CornerRadius="4" Height="34" Padding="10,0">
-                            <TextBlock Text="{Binding TotalValuation, StringFormat={}{0:C2}}"
+                            <TextBlock Text="{Binding TotalValuation, Converter={StaticResource Money}}"
                                        FontWeight="Bold"
                                        FontSize="14"
                                        Foreground="{StaticResource Brush.Primary}"

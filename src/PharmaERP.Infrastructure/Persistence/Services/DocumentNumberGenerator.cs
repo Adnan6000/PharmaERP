@@ -65,6 +65,42 @@ public class DocumentNumberGenerator : IDocumentNumberGenerator
                 includeYear = true;
                 break;
 
+            case DocumentType.JournalEntry:
+                prefix = "JE";
+                sequenceKey = $"JournalEntry_{effectiveYear}";
+                includeYear = true;
+                break;
+
+            case DocumentType.ReceiptVoucher:
+                prefix = "RV";
+                sequenceKey = $"ReceiptVoucher_{effectiveYear}";
+                includeYear = true;
+                break;
+
+            case DocumentType.PaymentVoucher:
+                prefix = "PV";
+                sequenceKey = $"PaymentVoucher_{effectiveYear}";
+                includeYear = true;
+                break;
+
+            case DocumentType.JournalVoucher:
+                prefix = "JV";
+                sequenceKey = $"JournalVoucher_{effectiveYear}";
+                includeYear = true;
+                break;
+
+            case DocumentType.OpeningBalanceVoucher:
+                prefix = "OB";
+                sequenceKey = $"OpeningBalance_{effectiveYear}";
+                includeYear = true;
+                break;
+
+            case DocumentType.ContraVoucher:
+                prefix = "CV";
+                sequenceKey = $"ContraVoucher_{effectiveYear}";
+                includeYear = true;
+                break;
+
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, "Unsupported document type.");
         }

@@ -23,6 +23,10 @@ public class MainWindowViewModel : ViewModelBase
     private readonly InventoryStockViewModel _inventoryStockVm;
     private readonly OpeningStockViewModel _openingStockVm;
     private readonly SettingsViewModel _settingsVm;
+    private readonly ChartOfAccountsViewModel _chartOfAccountsVm;
+    private readonly VouchersViewModel _vouchersVm;
+    private readonly LedgersViewModel _ledgersVm;
+    private readonly AccountingSetupViewModel _accountingSetupVm;
 
     private object _currentViewModel;
     private string _selectedNavSection = "Dashboard";
@@ -45,7 +49,11 @@ public class MainWindowViewModel : ViewModelBase
         PurchaseReturnsViewModel purchaseReturnsVm,
         InventoryStockViewModel inventoryStockVm,
         OpeningStockViewModel openingStockVm,
-        SettingsViewModel settingsVm)
+        SettingsViewModel settingsVm,
+        ChartOfAccountsViewModel chartOfAccountsVm,
+        VouchersViewModel vouchersVm,
+        LedgersViewModel ledgersVm,
+        AccountingSetupViewModel accountingSetupVm)
     {
         _connectionStore = connectionStore;
         _dashboardVm = dashboardVm;
@@ -64,6 +72,10 @@ public class MainWindowViewModel : ViewModelBase
         _inventoryStockVm = inventoryStockVm;
         _openingStockVm = openingStockVm;
         _settingsVm = settingsVm;
+        _chartOfAccountsVm = chartOfAccountsVm;
+        _vouchersVm = vouchersVm;
+        _ledgersVm = ledgersVm;
+        _accountingSetupVm = accountingSetupVm;
 
         _currentViewModel = _dashboardVm;
         _dashboardVm.SetNavigateAction(NavigateToSection);
@@ -139,8 +151,36 @@ public class MainWindowViewModel : ViewModelBase
             "Categories" => _categoriesVm,
             "Units" => _unitsVm,
             "Settings" => _settingsVm,
+            "ChartOfAccounts" => SwitchToChartOfAccounts(),
+            "Vouchers" => SwitchToVouchers(),
+            "Ledgers" => SwitchToLedgers(),
+            "AccountingSetup" => SwitchToAccountingSetup(),
             _ => _dashboardVm
         };
+    }
+
+    private object SwitchToChartOfAccounts()
+    {
+        _ = _chartOfAccountsVm.LoadAccountsAsync();
+        return _chartOfAccountsVm;
+    }
+
+    private object SwitchToVouchers()
+    {
+        _ = _vouchersVm.InitializeAsync();
+        return _vouchersVm;
+    }
+
+    private object SwitchToLedgers()
+    {
+        _ = _ledgersVm.InitializeAsync();
+        return _ledgersVm;
+    }
+
+    private object SwitchToAccountingSetup()
+    {
+        _ = _accountingSetupVm.InitializeAsync();
+        return _accountingSetupVm;
     }
 
     private void HandleRefresh()
@@ -157,6 +197,10 @@ public class MainWindowViewModel : ViewModelBase
         else if (CurrentViewModel is ManufacturersViewModel m && m.RefreshCommand.CanExecute(null)) m.RefreshCommand.Execute(null);
         else if (CurrentViewModel is CategoriesViewModel c && c.RefreshCommand.CanExecute(null)) c.RefreshCommand.Execute(null);
         else if (CurrentViewModel is UnitsViewModel u && u.RefreshCommand.CanExecute(null)) u.RefreshCommand.Execute(null);
+        else if (CurrentViewModel is ChartOfAccountsViewModel coa && coa.RefreshCommand.CanExecute(null)) coa.RefreshCommand.Execute(null);
+        else if (CurrentViewModel is VouchersViewModel v && v.RefreshCommand.CanExecute(null)) v.RefreshCommand.Execute(null);
+        else if (CurrentViewModel is LedgersViewModel l && l.RefreshCommand.CanExecute(null)) l.RefreshCommand.Execute(null);
+        else if (CurrentViewModel is AccountingSetupViewModel asvm && asvm.RefreshCommand.CanExecute(null)) asvm.RefreshCommand.Execute(null);
     }
 
     private void HandleNewItem()
@@ -170,6 +214,8 @@ public class MainWindowViewModel : ViewModelBase
         else if (CurrentViewModel is ManufacturersViewModel m && m.NewCommand.CanExecute(null)) m.NewCommand.Execute(null);
         else if (CurrentViewModel is CategoriesViewModel c && c.NewCommand.CanExecute(null)) c.NewCommand.Execute(null);
         else if (CurrentViewModel is UnitsViewModel u && u.NewCommand.CanExecute(null)) u.NewCommand.Execute(null);
+        else if (CurrentViewModel is ChartOfAccountsViewModel coa && coa.OpenNewAccountDrawerCommand.CanExecute(null)) coa.OpenNewAccountDrawerCommand.Execute(null);
+        else if (CurrentViewModel is VouchersViewModel v && v.OpenNewDrawerCommand.CanExecute(null)) v.OpenNewDrawerCommand.Execute(null);
     }
 
     private void HandleCloseDrawer()
@@ -185,6 +231,8 @@ public class MainWindowViewModel : ViewModelBase
         else if (CurrentViewModel is ManufacturersViewModel { IsDrawerOpen: true } m) m.CloseDrawer();
         else if (CurrentViewModel is CategoriesViewModel { IsDrawerOpen: true } c) c.CloseDrawer();
         else if (CurrentViewModel is UnitsViewModel { IsDrawerOpen: true } u) u.CloseDrawer();
+        else if (CurrentViewModel is ChartOfAccountsViewModel { IsDrawerOpen: true } coa) coa.CloseDrawer();
+        else if (CurrentViewModel is VouchersViewModel v) v.CloseAllDrawers();
     }
 
     private void HandleSaveItem()

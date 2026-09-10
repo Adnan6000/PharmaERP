@@ -6,7 +6,9 @@ using Microsoft.Extensions.Logging;
 using PharmaERP.Application.Common.Exceptions;
 using PharmaERP.Application.Common.Interfaces;
 using PharmaERP.Application.DTOs;
+using PharmaERP.Application.Interfaces;
 using PharmaERP.Domain.Entities;
+using PharmaERP.Domain.Enums;
 using PharmaERP.Infrastructure.Persistence.Helpers;
 
 namespace PharmaERP.Infrastructure.Persistence.Services;
@@ -14,13 +16,19 @@ namespace PharmaERP.Infrastructure.Persistence.Services;
 public class PurchaseTransactionWriter : IPurchaseTransactionWriter
 {
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
+    private readonly IAccountingOperationalGate _accountingGate;
+    private readonly IAccountingTransactionWriter _accountingTransactionWriter;
     private readonly ILogger<PurchaseTransactionWriter> _logger;
 
     public PurchaseTransactionWriter(
         IDbContextFactory<AppDbContext> contextFactory,
+        IAccountingOperationalGate accountingGate,
+        IAccountingTransactionWriter accountingTransactionWriter,
         ILogger<PurchaseTransactionWriter> logger)
     {
         _contextFactory = contextFactory;
+        _accountingGate = accountingGate;
+        _accountingTransactionWriter = accountingTransactionWriter;
         _logger = logger;
     }
 
@@ -41,6 +49,7 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
             throw new ValidationException("Purchase invoice must contain at least one line item.");
         }
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var supplier = await context.Suppliers
@@ -318,6 +327,9 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
             invoice.NetTotal = grossTotal - totalDiscount;
 
             await context.SaveChangesAsync(cancellationToken);
+
+            await _accountingTransactionWriter.PostPurchaseInvoiceJournalAsync(context, invoice, cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
 
             return new PurchaseInvoiceDto(
@@ -358,6 +370,7 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
             throw new ValidationException("Cancellation reason is required.");
         }
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var invoice = await context.PurchaseInvoices
@@ -393,6 +406,17 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
         {
             throw new ValidationException(returnRejectMessage);
         }
+
+        // Guard: Verify no active payment voucher settlement allocations exist for this invoice
+        bool hasActiveAllocations = await context.PaymentVoucherAllocations
+            .AnyAsync(a => a.PurchaseInvoiceId == purchaseInvoiceId && a.Status == AllocationStatus.Active, cancellationToken);
+
+        if (hasActiveAllocations)
+        {
+            throw new ValidationException(
+                $"Cannot cancel purchase invoice '{invoice.InvoiceNumber}' because it has active payment voucher settlement allocations. Remove or void allocations first.");
+        }
+
 
         // Conservative verification: check downstream outflows on any of the batches
         var invoiceDate = invoice.PostedAtUtc ?? invoice.CreatedAtUtc;
@@ -527,6 +551,9 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
             invoice.UpdatedAtUtc = nowUtc;
 
             await context.SaveChangesAsync(cancellationToken);
+
+            await _accountingTransactionWriter.PostPurchaseInvoiceReversalAsync(context, invoice, reason.Trim(), cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -554,6 +581,7 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
             throw new ValidationException("Purchase return must contain at least one item.");
         }
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var supplier = await context.Suppliers
@@ -799,6 +827,9 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
 
             purchaseReturn.TotalAmount = totalAmount;
             await context.SaveChangesAsync(cancellationToken);
+
+            await _accountingTransactionWriter.PostPurchaseReturnJournalAsync(context, purchaseReturn, cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
 
             return new PurchaseReturnDto(
@@ -834,6 +865,7 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
             throw new ValidationException("Cancellation reason is required.");
         }
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var purchaseReturn = await context.PurchaseReturns
@@ -976,6 +1008,9 @@ public class PurchaseTransactionWriter : IPurchaseTransactionWriter
             purchaseReturn.UpdatedAtUtc = nowUtc;
 
             await context.SaveChangesAsync(cancellationToken);
+
+            await _accountingTransactionWriter.PostPurchaseReturnReversalAsync(context, purchaseReturn, reason.Trim(), cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
         }
         catch (Exception ex)

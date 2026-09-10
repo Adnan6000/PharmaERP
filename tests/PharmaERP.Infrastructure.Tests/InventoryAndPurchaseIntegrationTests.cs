@@ -75,7 +75,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
     {
         var (productId, _) = await SeedProductAndSupplierAsync();
 
-        var writer = new InventoryTransactionWriter(_fixture.ContextFactory, NullLogger<InventoryTransactionWriter>.Instance);
+        var writer = _fixture.CreateInventoryWriter();
 
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
         var batchDto = await writer.RecordOpeningStockAsync(new OpeningStockCreateDto
@@ -106,7 +106,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
     {
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
 
-        var writer = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer = _fixture.CreatePurchaseWriter();
 
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
         var invoiceDto = await writer.CreateAndPostPurchaseInvoiceAsync("PINV-2026-000001", new PurchaseInvoiceCreateDto
@@ -172,8 +172,8 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
     {
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
 
-        var writer1 = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
-        var writer2 = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer1 = _fixture.CreatePurchaseWriter();
+        var writer2 = _fixture.CreatePurchaseWriter();
 
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
 
@@ -228,7 +228,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
     {
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
 
-        var writer = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer = _fixture.CreatePurchaseWriter();
 
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
         var invoice = await writer.CreateAndPostPurchaseInvoiceAsync("PINV-RET-001", new PurchaseInvoiceCreateDto
@@ -300,7 +300,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
         // Current Qty = 200, InventoryValue = 3000, AveragePurchaseCost = 15
         // Cancelling Purchase A must leave: Qty = 100, InventoryValue = 2000, AveragePurchaseCost = 20
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
-        var writer = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer = _fixture.CreatePurchaseWriter();
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
 
         var invoiceA = await writer.CreateAndPostPurchaseInvoiceAsync("PINV-A-001", new PurchaseInvoiceCreateDto
@@ -378,7 +378,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
     {
         // Scenario: Full depletion to 0 stock must strictly reset InventoryValue = 0 and AveragePurchaseCost = 0
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
-        var writer = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer = _fixture.CreatePurchaseWriter();
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
 
         var invoice = await writer.CreateAndPostPurchaseInvoiceAsync("PINV-DEP-001", new PurchaseInvoiceCreateDto
@@ -420,7 +420,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
     public async Task TestC_LinkedPurchaseReturn_ValuationAuditFields_PreservedAccurately()
     {
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
-        var writer = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer = _fixture.CreatePurchaseWriter();
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
 
         var invoice = await writer.CreateAndPostPurchaseInvoiceAsync("PINV-LNK-001", new PurchaseInvoiceCreateDto
@@ -535,7 +535,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
     public async Task TestE_CancelPurchaseReturn_RestoresStockAndValuation_RevertsReturnedQuantity_LinksReversalMovement()
     {
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
-        var writer = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer = _fixture.CreatePurchaseWriter();
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
 
         var invoice = await writer.CreateAndPostPurchaseInvoiceAsync("PINV-REV-001", new PurchaseInvoiceCreateDto
@@ -623,7 +623,7 @@ public class InventoryAndPurchaseIntegrationTests : IAsyncLifetime
         // - Cancel/reverse the Purchase Return -> ReturnedQuantity becomes 0
         // - Retry Purchase A cancellation -> EXPECTED: allowed if all other downstream-consumption rules are satisfied
         var (productId, supplierId) = await SeedProductAndSupplierAsync();
-        var writer = new PurchaseTransactionWriter(_fixture.ContextFactory, NullLogger<PurchaseTransactionWriter>.Instance);
+        var writer = _fixture.CreatePurchaseWriter();
         var exp = DateOnly.FromDateTime(DateTime.Today.AddYears(2));
 
         var invoiceA = await writer.CreateAndPostPurchaseInvoiceAsync("PINV-LCG-001", new PurchaseInvoiceCreateDto

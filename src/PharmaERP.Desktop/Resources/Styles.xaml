@@ -96,6 +96,45 @@
         </Setter>
     </Style>
 
+    <!-- Danger Button (Confirm Cancel, Delete, Void) -->
+    <Style x:Key="Button.Danger" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource Brush.Status.Error}" />
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text.Inverse}" />
+        <Setter Property="FontFamily" Value="{StaticResource FontFamily.Default}" />
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Body}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Padding" Value="14,8" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="5"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Opacity" Value="0.85" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Opacity" Value="0.7" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource Brush.Surface.Hover}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                            <Setter Property="Cursor" Value="Arrow" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Subtle Icon/Action Button (Table Actions) -->
     <Style x:Key="Button.Subtle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
@@ -228,6 +267,12 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
         <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+
+    <!-- Form Field Input -->
+    <Style x:Key="Form.Input" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
     <!-- Clean Modern DataGrid Styling -->

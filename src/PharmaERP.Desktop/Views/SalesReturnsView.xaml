@@ -151,7 +151,7 @@
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,24,0">
                                 <TextBlock Text="Total Refund:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
                                 <Border Background="#E8F5E9" CornerRadius="6" Padding="12,4">
-                                    <TextBlock Text="{Binding TotalRefundAmount, StringFormat='Rs. {0:N2}'}"
+                                    <TextBlock Text="{Binding TotalRefundAmount, Converter={StaticResource Money}}"
                                                FontSize="18"
                                                FontWeight="Bold"
                                                Foreground="#2E7D32" />

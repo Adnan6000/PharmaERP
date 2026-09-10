@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using PharmaERP.Application.Common.Exceptions;
 using PharmaERP.Application.Common.Interfaces;
 using PharmaERP.Application.DTOs;
+using PharmaERP.Application.Interfaces;
 using PharmaERP.Domain.Entities;
 using PharmaERP.Domain.Enums;
 using PharmaERP.Infrastructure.Persistence.Helpers;
@@ -17,17 +18,23 @@ public class SaleTransactionWriter : ISaleTransactionWriter
     private readonly IDbContextFactory<AppDbContext> _contextFactory;
     private readonly IAppConfigRepository _appConfigRepository;
     private readonly IBusinessClock _businessClock;
+    private readonly IAccountingOperationalGate _accountingGate;
+    private readonly IAccountingTransactionWriter _accountingTransactionWriter;
     private readonly ILogger<SaleTransactionWriter> _logger;
 
     public SaleTransactionWriter(
         IDbContextFactory<AppDbContext> contextFactory,
         IAppConfigRepository appConfigRepository,
         IBusinessClock businessClock,
+        IAccountingOperationalGate accountingGate,
+        IAccountingTransactionWriter accountingTransactionWriter,
         ILogger<SaleTransactionWriter> logger)
     {
         _contextFactory = contextFactory;
         _appConfigRepository = appConfigRepository;
         _businessClock = businessClock;
+        _accountingGate = accountingGate;
+        _accountingTransactionWriter = accountingTransactionWriter;
         _logger = logger;
     }
 
@@ -47,6 +54,7 @@ public class SaleTransactionWriter : ISaleTransactionWriter
         if (dto.SaleType == SaleType.Credit && !dto.CustomerId.HasValue)
             throw new ValidationException("A customer is required for credit sales.");
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         // Idempotency check before starting (Requirement 11)
@@ -314,6 +322,9 @@ public class SaleTransactionWriter : ISaleTransactionWriter
                 }
             }
 
+            decimal totalCogs = invoiceItems.SelectMany(i => i.BatchAllocations).Sum(a => a.InventoryValueConsumed);
+            await _accountingTransactionWriter.PostSaleInvoiceJournalAsync(context, invoice, totalCogs, cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
 
             invoice.Items = invoiceItems;
@@ -358,6 +369,7 @@ public class SaleTransactionWriter : ISaleTransactionWriter
         if (dto.Items == null || dto.Items.Count == 0)
             throw new ValidationException("Sale return must contain at least one line item.");
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         // Idempotency check before starting (Requirement 11)
@@ -579,6 +591,9 @@ public class SaleTransactionWriter : ISaleTransactionWriter
             returnEntity.Items = returnItems;
             await context.SaveChangesAsync(cancellationToken);
 
+            decimal totalRestoredInv = returnItems.SelectMany(i => i.BatchAllocations).Sum(a => a.RestoredInventoryValue);
+            await _accountingTransactionWriter.PostSaleReturnJournalAsync(context, returnEntity, totalRestoredInv, cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
             return MapReturnToDto(returnEntity);
         }
@@ -616,6 +631,7 @@ public class SaleTransactionWriter : ISaleTransactionWriter
         if (string.IsNullOrWhiteSpace(cancellationReason))
             throw new ValidationException("Cancellation reason is required.");
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var invoice = await context.SaleInvoices
@@ -646,6 +662,17 @@ public class SaleTransactionWriter : ISaleTransactionWriter
             throw new ValidationException(
                 "This sale invoice has active customer returns recorded against it. Cancel those returns first, then try cancelling the sale.");
         }
+
+        // Guard: Verify no active receipt voucher settlement allocations exist for this invoice
+        bool hasActiveAllocations = await context.ReceiptVoucherAllocations
+            .AnyAsync(a => a.SaleInvoiceId == id && a.Status == AllocationStatus.Active, cancellationToken);
+
+        if (hasActiveAllocations)
+        {
+            throw new ValidationException(
+                $"Cannot cancel sale invoice '{invoice.InvoiceNumber}' because it has active receipt voucher settlement allocations. Remove or void allocations first.");
+        }
+
 
         DateTime serverUtc = await _businessClock.GetServerUtcNowAsync(cancellationToken);
 
@@ -719,6 +746,9 @@ public class SaleTransactionWriter : ISaleTransactionWriter
             invoice.CancellationReason = cancellationReason;
 
             await context.SaveChangesAsync(cancellationToken);
+
+            await _accountingTransactionWriter.PostSaleInvoiceReversalAsync(context, invoice, cancellationReason, cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
 
             return MapToDto(invoice);
@@ -739,6 +769,7 @@ public class SaleTransactionWriter : ISaleTransactionWriter
         if (string.IsNullOrWhiteSpace(cancellationReason))
             throw new ValidationException("Cancellation reason is required.");
 
+        await using var gate = await _accountingGate.AcquireSharedOperationalGateAsync(cancellationToken);
         await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
 
         var saleReturn = await context.SaleReturns
@@ -888,6 +919,9 @@ public class SaleTransactionWriter : ISaleTransactionWriter
             saleReturn.CancellationReason = cancellationReason;
 
             await context.SaveChangesAsync(cancellationToken);
+
+            await _accountingTransactionWriter.PostSaleReturnReversalAsync(context, saleReturn, cancellationReason, cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
 
             return MapReturnToDto(saleReturn);

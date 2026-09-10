@@ -1,0 +1,858 @@
+<UserControl x:Class="PharmaERP.Desktop.Views.LedgersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
+             xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:LedgersViewModel}">
+
+    <UserControl.Resources>
+        <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <!-- Title & Tabs -->
+            <RowDefinition Height="Auto" />
+            <!-- Toolbar Filters -->
+            <RowDefinition Height="Auto" />
+            <!-- Error Banner -->
+            <RowDefinition Height="Auto" />
+            <!-- Active Ledger / Statement Content -->
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Page Title & Tabs -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="General Ledger &amp; Financial Statements" Style="{StaticResource Text.Display}" />
+            <TextBlock Text="Double-entry audit ledgers, dedicated cash &amp; bank books, party subledgers, trial balance, and financial statements."
+                       Foreground="{StaticResource Brush.Text.Secondary}" FontSize="13" Margin="0,4,0,12" />
+
+            <WrapPanel Orientation="Horizontal">
+                <RadioButton Content="📘 General Ledger"
+                             GroupName="LedgerTabs"
+                             IsChecked="True"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="GeneralLedger"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="💵 Cash Book"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="CashBook"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="🏛️ Bank Book"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="BankBook"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="👥 Customer Subledger"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="CustomerLedger"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="🚚 Supplier Subledger"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="SupplierLedger"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="📅 Day Book"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="DayBook"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="⚖️ Trial Balance"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="TrialBalance"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="📈 Profit &amp; Loss"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="ProfitLoss"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+                <RadioButton Content="📑 Balance Sheet"
+                             GroupName="LedgerTabs"
+                             Command="{Binding SwitchTabCommand}"
+                             CommandParameter="BalanceSheet"
+                             Margin="0,0,12,6"
+                             FontWeight="SemiBold" />
+            </WrapPanel>
+        </StackPanel>
+
+        <!-- Toolbar Filters -->
+        <Border Grid.Row="1" Style="{StaticResource Card.Default}" Padding="12" Margin="0,0,0,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Dynamic Pickers Based on Tab -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Date Range for standard statements -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="DayBook">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="BalanceSheet">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="From:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <DatePicker SelectedDate="{Binding FromDate}" Width="125" Margin="0,0,14,0" />
+                        <TextBlock Text="To:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <DatePicker SelectedDate="{Binding ToDate}" Width="125" Margin="0,0,14,0" />
+                    </StackPanel>
+
+                    <!-- As Of Date for Balance Sheet -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="BalanceSheet">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="As of Date:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <DatePicker SelectedDate="{Binding ToDate}" Width="135" Margin="0,0,14,0" />
+                    </StackPanel>
+
+                    <!-- Account Picker for General Ledger -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="GeneralLedger">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Account:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <ComboBox ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}" DisplayMemberPath="Name" Width="240" Margin="0,0,14,0" />
+                    </StackPanel>
+
+                    <!-- Cash Account Picker for Cash Book -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="CashBook">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Cash Account:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <ComboBox ItemsSource="{Binding CashAccounts}" SelectedItem="{Binding SelectedCashAccount}" DisplayMemberPath="Name" Width="240" Margin="0,0,14,0" />
+                    </StackPanel>
+
+                    <!-- Bank Account Picker for Bank Book -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="BankBook">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Bank Account:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <ComboBox ItemsSource="{Binding BankAccounts}" SelectedItem="{Binding SelectedBankAccount}" DisplayMemberPath="Name" Width="240" Margin="0,0,14,0" />
+                    </StackPanel>
+
+                    <!-- Customer Picker for Customer Ledger -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="CustomerLedger">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Customer:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Name" Width="220" Margin="0,0,14,0" />
+                    </StackPanel>
+
+                    <!-- Supplier Picker for Supplier Ledger -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="SupplierLedger">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Supplier:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" DisplayMemberPath="Name" Width="220" Margin="0,0,14,0" />
+                    </StackPanel>
+
+                    <!-- Day Book Date Picker -->
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ActiveTab}" Value="DayBook">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="Day Book Date:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <DatePicker SelectedDate="{Binding DayBookDate}" Width="140" Margin="0,0,14,0" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Button Style="{StaticResource Button.Primary}"
+                            Content="🔍 Run Report / Statement"
+                            Command="{Binding RefreshCommand}"
+                            Padding="16,6" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Error Banner -->
+        <Border Grid.Row="2"
+                Background="{StaticResource Brush.Status.Error.Bg}"
+                BorderBrush="{StaticResource Brush.Status.Error}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12,8"
+                Margin="0,0,0,12"
+                Visibility="{Binding ErrorMessage, Converter={StaticResource NullToVis}}">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource Brush.Status.Error}" FontSize="12" />
+        </Border>
+
+        <!-- Dynamic Content -->
+        <Border Grid.Row="3" Style="{StaticResource Card.Default}" Padding="0">
+            <Grid>
+                <!-- 1. GENERAL LEDGER STATEMENT -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="GeneralLedger">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="{StaticResource Brush.Surface.Muted}" Padding="16,10" BorderThickness="0,0,0,1" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Opening Balance: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding GeneralLedgerStatement.OpeningBalance, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Period Debit: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding GeneralLedgerStatement.TotalDebit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Period Credit: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding GeneralLedgerStatement.TotalCredit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Closing Balance: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding GeneralLedgerStatement.ClosingBalance, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding GlLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="0" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Journal #" Binding="{Binding JournalNumber}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" />
+                            <DataGridTextColumn Header="Source Document" Binding="{Binding SourceDocumentType}" Width="130" />
+                            <DataGridTextColumn Header="Narration / Description" Binding="{Binding Narration}" Width="*" />
+                            <DataGridTextColumn Header="Debit" Binding="{Binding Debit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Credit" Binding="{Binding Credit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Balance" Binding="{Binding RunningBalance, StringFormat='{}{0:N2}'}" Width="130" FontWeight="Bold" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="2" Background="{StaticResource Brush.Surface}" Padding="12,8" BorderThickness="0,1,0,0" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="⏮ First" Command="{Binding GlFirstPageCommand}" Padding="8,4" Margin="0,0,6,0" />
+                            <Button Style="{StaticResource Button.Outline}" Content="◀ Prev" Command="{Binding GlPreviousPageCommand}" Padding="8,4" Margin="0,0,6,0" />
+                            <Button Style="{StaticResource Button.Outline}" Content="Next ▶" Command="{Binding GlNextPageCommand}" Padding="8,4" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- 2. CASH BOOK -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="CashBook">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="{StaticResource Brush.Surface.Muted}" Padding="16,10" BorderThickness="0,0,0,1" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Cash Account: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SelectedCashAccount.Name}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Opening Cash: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CashBookStatement.OpeningBalance, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Inflows (Receipts): " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CashBookStatement.TotalDebit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Outflows (Payments): " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CashBookStatement.TotalCredit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Closing Cash Balance: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CashBookStatement.ClosingBalance, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding CashBookLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="0" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Journal #" Binding="{Binding JournalNumber}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" />
+                            <DataGridTextColumn Header="Source Document" Binding="{Binding SourceDocumentType}" Width="130" />
+                            <DataGridTextColumn Header="Narration / Description" Binding="{Binding Narration}" Width="*" />
+                            <DataGridTextColumn Header="Receipt / Inflow (Dr)" Binding="{Binding Debit, StringFormat='{}{0:N2}'}" Width="140" />
+                            <DataGridTextColumn Header="Payment / Outflow (Cr)" Binding="{Binding Credit, StringFormat='{}{0:N2}'}" Width="140" />
+                            <DataGridTextColumn Header="Cash Balance" Binding="{Binding RunningBalance, StringFormat='{}{0:N2}'}" Width="130" FontWeight="Bold" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- 3. BANK BOOK -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="BankBook">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="{StaticResource Brush.Surface.Muted}" Padding="16,10" BorderThickness="0,0,0,1" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Bank Account: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SelectedBankAccount.Name}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Opening Balance: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding BankBookStatement.OpeningBalance, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Deposits / Inflows: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding BankBookStatement.TotalDebit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Withdrawals / Payments: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding BankBookStatement.TotalCredit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Closing Bank Balance: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding BankBookStatement.ClosingBalance, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding BankBookLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="0" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Journal #" Binding="{Binding JournalNumber}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" />
+                            <DataGridTextColumn Header="Source Document" Binding="{Binding SourceDocumentType}" Width="130" />
+                            <DataGridTextColumn Header="Narration / Description" Binding="{Binding Narration}" Width="*" />
+                            <DataGridTextColumn Header="Deposit (Dr)" Binding="{Binding Debit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Withdrawal (Cr)" Binding="{Binding Credit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Bank Balance" Binding="{Binding RunningBalance, StringFormat='{}{0:N2}'}" Width="130" FontWeight="Bold" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- 4. CUSTOMER SUBLEDGER STATEMENT -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="CustomerLedger">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="{StaticResource Brush.Surface.Muted}" Padding="16,10" BorderThickness="0,0,0,1" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Customer: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CustomerLedgerStatement.PartyName}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Opening: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CustomerLedgerStatement.OpeningBalance, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Closing Balance: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding CustomerLedgerStatement.ClosingBalance, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding CustomerLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="0" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Journal #" Binding="{Binding JournalNumber}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" />
+                            <DataGridTextColumn Header="Source" Binding="{Binding SourceDocumentType}" Width="130" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />
+                            <DataGridTextColumn Header="Debit (Charges)" Binding="{Binding Debit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Credit (Payments)" Binding="{Binding Credit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Balance" Binding="{Binding RunningBalance, StringFormat='{}{0:N2}'}" Width="130" FontWeight="Bold" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="2" Background="{StaticResource Brush.Surface}" Padding="12,8" BorderThickness="0,1,0,0" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="⏮ First" Command="{Binding CustFirstPageCommand}" Padding="8,4" Margin="0,0,6,0" />
+                            <Button Style="{StaticResource Button.Outline}" Content="◀ Prev" Command="{Binding CustPreviousPageCommand}" Padding="8,4" Margin="0,0,6,0" />
+                            <Button Style="{StaticResource Button.Outline}" Content="Next ▶" Command="{Binding CustNextPageCommand}" Padding="8,4" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- 5. SUPPLIER SUBLEDGER STATEMENT -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="SupplierLedger">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Background="{StaticResource Brush.Surface.Muted}" Padding="16,10" BorderThickness="0,0,0,1" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Supplier: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SupplierLedgerStatement.PartyName}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Opening: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SupplierLedgerStatement.OpeningBalance, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            <TextBlock Text="Closing Balance: " FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding SupplierLedgerStatement.ClosingBalance, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                        </StackPanel>
+                    </Border>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding SupplierLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="0" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Date" Binding="{Binding Date, StringFormat='yyyy-MM-dd'}" Width="100" />
+                            <DataGridTextColumn Header="Journal #" Binding="{Binding JournalNumber}" Width="150" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Voucher #" Binding="{Binding VoucherNumber}" Width="150" />
+                            <DataGridTextColumn Header="Source" Binding="{Binding SourceDocumentType}" Width="130" />
+                            <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="*" />
+                            <DataGridTextColumn Header="Debit (Payments)" Binding="{Binding Debit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Credit (Purchases)" Binding="{Binding Credit, StringFormat='{}{0:N2}'}" Width="120" />
+                            <DataGridTextColumn Header="Balance" Binding="{Binding RunningBalance, StringFormat='{}{0:N2}'}" Width="130" FontWeight="Bold" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border Grid.Row="2" Background="{StaticResource Brush.Surface}" Padding="12,8" BorderThickness="0,1,0,0" BorderBrush="{StaticResource Brush.Border}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Style="{StaticResource Button.Outline}" Content="⏮ First" Command="{Binding SupFirstPageCommand}" Padding="8,4" Margin="0,0,6,0" />
+                            <Button Style="{StaticResource Button.Outline}" Content="◀ Prev" Command="{Binding SupPreviousPageCommand}" Padding="8,4" Margin="0,0,6,0" />
+                            <Button Style="{StaticResource Button.Outline}" Content="Next ▶" Command="{Binding SupNextPageCommand}" Padding="8,4" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- 6. DAY BOOK -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="DayBook">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <DataGrid ItemsSource="{Binding DayBookJournals}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="0" RowHeight="36">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Journal #" Binding="{Binding JournalNumber}" Width="160" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Source Type" Binding="{Binding SourceDocumentType}" Width="140" />
+                            <DataGridTextColumn Header="Voucher / Doc #" Binding="{Binding SourceDocumentNumber}" Width="160" />
+                            <DataGridTextColumn Header="Narration" Binding="{Binding Narration}" Width="*" />
+                            <DataGridTextColumn Header="Total Debit" Binding="{Binding TotalDebit, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Total Credit" Binding="{Binding TotalCredit, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+
+                <!-- 7. TRIAL BALANCE -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="TrialBalance">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <DataGrid Grid.Row="0" ItemsSource="{Binding TbLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="0" RowHeight="32">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Code" Binding="{Binding AccountCode}" Width="110" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="260" />
+                            <DataGridTextColumn Header="Type" Binding="{Binding AccountType}" Width="110" />
+                            <DataGridTextColumn Header="Opening Dr" Binding="{Binding OpeningDebit, StringFormat='{}{0:N2}'}" Width="110" />
+                            <DataGridTextColumn Header="Opening Cr" Binding="{Binding OpeningCredit, StringFormat='{}{0:N2}'}" Width="110" />
+                            <DataGridTextColumn Header="Period Debit" Binding="{Binding PeriodDebit, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Period Credit" Binding="{Binding PeriodCredit, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                            <DataGridTextColumn Header="Closing Dr" Binding="{Binding ClosingDebit, StringFormat='{}{0:N2}'}" Width="120" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Closing Cr" Binding="{Binding ClosingCredit, StringFormat='{}{0:N2}'}" Width="120" FontWeight="Bold" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- TB Grand Totals & Balance Verification -->
+                    <Border Grid.Row="1" Background="{StaticResource Brush.Surface.Muted}" Padding="16,12" BorderThickness="0,1,0,0" BorderBrush="{StaticResource Brush.Border}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Total Debit: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding TrialBalanceReport.TotalClosingDebit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                                <TextBlock Text="Total Credit: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding TrialBalanceReport.TotalClosingCredit, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                                <TextBlock Text="Difference: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding TrialBalanceReport.Difference, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            </StackPanel>
+
+                            <Border Grid.Column="1" Padding="12,4" CornerRadius="4">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Status.Success.Bg}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TrialBalanceReport.IsBalanced}" Value="False">
+                                                <Setter Property="Background" Value="{StaticResource Brush.Status.Error.Bg}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontWeight="Bold" FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="✅ Balanced (Debit == Credit)" />
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding TrialBalanceReport.IsBalanced}" Value="False">
+                                                    <Setter Property="Text" Value="⚠️ OUT OF BALANCE" />
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Status.Error}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- 8. PROFIT & LOSS STATEMENT -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="ProfitLoss">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Revenues Column -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Operating Revenue" Style="{StaticResource Text.Subheading}" Margin="0,0,0,10" />
+                                <DataGrid ItemsSource="{Binding ProfitAndLossStatement.RevenueLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MinHeight="180">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Code" Binding="{Binding AccountCode}" Width="100" />
+                                        <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="*" />
+                                        <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Border Background="{StaticResource Brush.Surface.Muted}" Padding="12,8" Margin="0,8,0,0">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="Total Revenue: " FontWeight="Bold" />
+                                        <TextBlock Text="{Binding ProfitAndLossStatement.TotalRevenue, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Expenses Column -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Cost of Sales &amp; Operating Expenses" Style="{StaticResource Text.Subheading}" Margin="0,0,0,10" />
+                                <DataGrid ItemsSource="{Binding ProfitAndLossStatement.ExpenseLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MinHeight="180">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Code" Binding="{Binding AccountCode}" Width="100" />
+                                        <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="*" />
+                                        <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Border Background="{StaticResource Brush.Surface.Muted}" Padding="12,8" Margin="0,8,0,0">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="Total Expense: " FontWeight="Bold" />
+                                        <TextBlock Text="{Binding ProfitAndLossStatement.TotalExpense, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Status.Error}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <!-- P&L Bottom Summary -->
+                    <Border Grid.Row="1" Background="{StaticResource Brush.Surface.Muted}" Padding="16,12" BorderThickness="0,1,0,0" BorderBrush="{StaticResource Brush.Border}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Total Revenue: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding ProfitAndLossStatement.TotalRevenue, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                                <TextBlock Text="Total Expense: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding ProfitAndLossStatement.TotalExpense, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            </StackPanel>
+
+                            <Border Grid.Column="1" Padding="14,6" CornerRadius="4">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Status.Success.Bg}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ProfitAndLossStatement.IsProfit}" Value="False">
+                                                <Setter Property="Background" Value="{StaticResource Brush.Status.Error.Bg}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Net Result: " FontWeight="Bold" FontSize="13" />
+                                    <TextBlock Text="{Binding ProfitAndLossStatement.NetProfitOrLoss, Converter={StaticResource Money}}" FontWeight="Bold" FontSize="13">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ProfitAndLossStatement.IsProfit}" Value="False">
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Status.Error}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- 9. BALANCE SHEET STATEMENT -->
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveTab}" Value="BalanceSheet">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                        <Grid Margin="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Left: Assets -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Assets" Style="{StaticResource Text.Subheading}" Margin="0,0,0,10" />
+                                <DataGrid ItemsSource="{Binding BalanceSheetStatement.AssetLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MinHeight="180">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Code" Binding="{Binding AccountCode}" Width="100" />
+                                        <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="*" />
+                                        <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Border Background="{StaticResource Brush.Surface.Muted}" Padding="12,8" Margin="0,8,0,0">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="Total Assets: " FontWeight="Bold" />
+                                        <TextBlock Text="{Binding BalanceSheetStatement.TotalAssets, Converter={StaticResource Money}}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Right: Liabilities & Equity -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Liabilities" Style="{StaticResource Text.Subheading}" Margin="0,0,0,10" />
+                                <DataGrid ItemsSource="{Binding BalanceSheetStatement.LiabilityLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MinHeight="100">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Code" Binding="{Binding AccountCode}" Width="100" />
+                                        <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="*" />
+                                        <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <Border Background="{StaticResource Brush.Surface.Muted}" Padding="12,6" Margin="0,4,0,12">
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="Total Liabilities: " FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding BalanceSheetStatement.TotalLiabilities, Converter={StaticResource Money}}" FontWeight="Bold" />
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBlock Text="Equity" Style="{StaticResource Text.Subheading}" Margin="0,0,0,10" />
+                                <DataGrid ItemsSource="{Binding BalanceSheetStatement.EquityLines}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" GridLinesVisibility="Horizontal" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}" RowHeight="32" MinHeight="100">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Code" Binding="{Binding AccountCode}" Width="100" />
+                                        <DataGridTextColumn Header="Account Name" Binding="{Binding AccountName}" Width="*" />
+                                        <DataGridTextColumn Header="Amount" Binding="{Binding Amount, StringFormat='{}{0:N2}'}" Width="120" FontWeight="SemiBold" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+
+                                <Border Background="{StaticResource Brush.Surface.Muted}" Padding="12,8" Margin="0,4,0,0">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,4">
+                                            <TextBlock Text="Base Equity:" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding BalanceSheetStatement.TotalEquity, StringFormat='{}{0:N2}'}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Grid Margin="0,0,0,4">
+                                            <TextBlock Text="Current Period Earnings / (Loss):" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding BalanceSheetStatement.CurrentPeriodEarnings, StringFormat='{}{0:N2}'}" FontWeight="Bold" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Separator Margin="0,4" />
+                                        <Grid>
+                                            <TextBlock Text="Total Liabilities &amp; Equity:" FontWeight="Bold" />
+                                            <TextBlock Text="{Binding BalanceSheetStatement.TotalLiabilitiesAndEquity, StringFormat='{}{0:N2}'}" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+
+                    <!-- Balance Sheet Bottom Summary -->
+                    <Border Grid.Row="1" Background="{StaticResource Brush.Surface.Muted}" Padding="16,12" BorderThickness="0,1,0,0" BorderBrush="{StaticResource Brush.Border}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Total Assets: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding BalanceSheetStatement.TotalAssets, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                                <TextBlock Text="Total Liabilities + Equity: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding BalanceSheetStatement.TotalLiabilitiesAndEquity, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                                <TextBlock Text="Difference: " FontWeight="Bold" />
+                                <TextBlock Text="{Binding BalanceSheetStatement.Difference, Converter={StaticResource Money}}" FontWeight="Bold" Margin="0,0,24,0" />
+                            </StackPanel>
+
+                            <Border Grid.Column="1" Padding="12,4" CornerRadius="4">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource Brush.Status.Success.Bg}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding BalanceSheetStatement.IsBalanced}" Value="False">
+                                                <Setter Property="Background" Value="{StaticResource Brush.Status.Error.Bg}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock FontWeight="Bold" FontSize="12">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="✅ Balanced (Assets == Liabilities + Equity)" />
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BalanceSheetStatement.IsBalanced}" Value="False">
+                                                    <Setter Property="Text" Value="⚠️ OUT OF BALANCE" />
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Status.Error}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

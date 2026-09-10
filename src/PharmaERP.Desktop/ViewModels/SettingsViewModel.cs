@@ -3,6 +3,8 @@ using System.Text.Json;
 using System.Windows.Input;
 using Microsoft.Extensions.Configuration;
 using PharmaERP.Application.Common.Interfaces;
+using PharmaERP.Application.DTOs;
+using PharmaERP.Application.Interfaces;
 using PharmaERP.Desktop.Common;
 using PharmaERP.Desktop.Services;
 
@@ -14,6 +16,9 @@ public class SettingsViewModel : ViewModelBase
     private readonly IDatabaseMigrator _databaseMigrator;
     private readonly ConnectionStateStore _connectionStore;
     private readonly IConfiguration _configuration;
+    private readonly IRegionalSettingsService _regionalSettingsService;
+    private readonly ICurrencyFormatter _currencyFormatter;
+    private readonly ILanguageService _languageService;
 
     private readonly List<string> _profiles = ["Development", "Local", "LAN"];
     private string _selectedProfile = "Local";
@@ -34,16 +39,32 @@ public class SettingsViewModel : ViewModelBase
     private bool? _migrationSuccess;
     private string? _migrationTechnicalDetails;
 
+    // Regional & Base Currency
+    private RegionalSettingsDto _regionalSettings = new();
+    private CurrencyDefinitionDto? _selectedCurrency;
+    private readonly IDatabaseConfigStore _databaseConfigStore;
+    private LanguageOptionDto? _selectedLanguage;
+    private bool _isSavingRegional;
+    private string? _regionalSaveMessage;
+
     public SettingsViewModel(
         IDbConnectionTester connectionTester,
         IDatabaseMigrator databaseMigrator,
         ConnectionStateStore connectionStore,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IRegionalSettingsService regionalSettingsService,
+        ICurrencyFormatter currencyFormatter,
+        ILanguageService languageService,
+        IDatabaseConfigStore databaseConfigStore)
     {
         _connectionTester = connectionTester;
         _databaseMigrator = databaseMigrator;
         _connectionStore = connectionStore;
         _configuration = configuration;
+        _regionalSettingsService = regionalSettingsService;
+        _currencyFormatter = currencyFormatter;
+        _languageService = languageService;
+        _databaseConfigStore = databaseConfigStore;
 
         SelectedProfile = _connectionStore.ActiveProfile;
         LoadProfileDetails(SelectedProfile);
@@ -63,6 +84,29 @@ public class SettingsViewModel : ViewModelBase
         MigrateDatabaseCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await MigrateDatabaseAsync(ct),
             canExecute: _ => !IsMigrating);
+
+        SaveRegionalSettingsCommand = new AsyncRelayCommand(
+            execute: async (_, ct) => await SaveRegionalSettingsAsync(ct),
+            canExecute: _ => !IsSavingRegional);
+
+        OpenSetupWizardCommand = new RelayCommand(_ =>
+        {
+            var protector = new PharmaERP.Infrastructure.Security.DpapiCredentialProtector();
+            var factory = new PharmaERP.Infrastructure.Persistence.SqlConnectionStringFactory(protector);
+            var setupVm = new DatabaseSetupViewModel(
+                _connectionTester,
+                _databaseMigrator,
+                _databaseConfigStore,
+                protector,
+                factory);
+
+            var window = new Views.DatabaseSetupWindow(setupVm);
+            window.Owner = System.Windows.Application.Current?.MainWindow;
+            window.ShowDialog();
+            _ = _connectionStore.CheckConnectionAsync();
+        });
+
+        _ = LoadRegionalSettingsAsync();
     }
 
     public ConnectionStateStore ConnectionStore => _connectionStore;
@@ -166,6 +210,123 @@ public class SettingsViewModel : ViewModelBase
     public ICommand TestSelectedProfileCommand { get; }
     public ICommand ApplyProfileCommand { get; }
     public ICommand MigrateDatabaseCommand { get; }
+    public ICommand SaveRegionalSettingsCommand { get; }
+    public ICommand OpenSetupWizardCommand { get; }
+
+    // Regional Properties
+    public IReadOnlyList<CurrencyDefinitionDto> CuratedCurrencies => CurrencyDefinitionDto.CuratedCurrencies;
+    public IReadOnlyList<LanguageOptionDto> SupportedLanguages => _languageService.SupportedLanguages;
+
+    public CurrencyDefinitionDto? SelectedCurrency
+    {
+        get => _selectedCurrency;
+        set
+        {
+            if (SetField(ref _selectedCurrency, value))
+            {
+                OnPropertyChanged(nameof(SampleAmountFormatted));
+            }
+        }
+    }
+
+    public LanguageOptionDto? SelectedLanguage
+    {
+        get => _selectedLanguage;
+        set => SetField(ref _selectedLanguage, value);
+    }
+
+    public string CountryCode => _regionalSettings.CountryCode;
+    public string CurrencyCode => _selectedCurrency?.CurrencyCode ?? _regionalSettings.CurrencyCode;
+    public string CurrencySymbol => _selectedCurrency?.Symbol ?? _regionalSettings.CurrencySymbol;
+    public int CurrencyDecimalPlaces => _selectedCurrency?.DefaultDecimalPlaces ?? _regionalSettings.CurrencyDecimalPlaces;
+    public string CultureName => _selectedCurrency?.CultureName ?? _regionalSettings.CultureName;
+    public bool IsBaseCurrencyLocked => _regionalSettings.IsBaseCurrencyLocked;
+
+    public string SampleAmountFormatted
+    {
+        get
+        {
+            var curr = SelectedCurrency ?? CurrencyDefinitionDto.GetOrDefault(_regionalSettings.CurrencyCode);
+            string sym = curr.Symbol;
+            int dec = curr.DefaultDecimalPlaces;
+            decimal sample = 1250.00m;
+            return $"{sym} {sample.ToString($"N{dec}", System.Globalization.CultureInfo.InvariantCulture)}";
+        }
+    }
+
+    public bool IsSavingRegional
+    {
+        get => _isSavingRegional;
+        private set => SetField(ref _isSavingRegional, value);
+    }
+
+    public string? RegionalSaveMessage
+    {
+        get => _regionalSaveMessage;
+        private set => SetField(ref _regionalSaveMessage, value);
+    }
+
+    public async Task LoadRegionalSettingsAsync()
+    {
+        try
+        {
+            _regionalSettings = await _regionalSettingsService.GetRegionalSettingsAsync();
+            _selectedCurrency = CurrencyDefinitionDto.GetOrDefault(_regionalSettings.CurrencyCode);
+            _selectedLanguage = _languageService.SupportedLanguages.FirstOrDefault(l => l.Code == _languageService.CurrentLanguageCode)
+                                ?? _languageService.SupportedLanguages[0];
+
+            OnPropertyChanged(nameof(CountryCode));
+            OnPropertyChanged(nameof(CurrencyCode));
+            OnPropertyChanged(nameof(CurrencySymbol));
+            OnPropertyChanged(nameof(CurrencyDecimalPlaces));
+            OnPropertyChanged(nameof(CultureName));
+            OnPropertyChanged(nameof(IsBaseCurrencyLocked));
+            OnPropertyChanged(nameof(SelectedCurrency));
+            OnPropertyChanged(nameof(SelectedLanguage));
+            OnPropertyChanged(nameof(SampleAmountFormatted));
+        }
+        catch
+        {
+            // Keep in-memory defaults
+        }
+    }
+
+    public async Task SaveRegionalSettingsAsync(CancellationToken ct)
+    {
+        IsSavingRegional = true;
+        RegionalSaveMessage = null;
+
+        try
+        {
+            if (SelectedCurrency != null && !_regionalSettings.IsBaseCurrencyLocked)
+            {
+                _regionalSettings.CurrencyCode = SelectedCurrency.CurrencyCode;
+                _regionalSettings.CurrencySymbol = SelectedCurrency.Symbol;
+                _regionalSettings.CurrencyDecimalPlaces = SelectedCurrency.DefaultDecimalPlaces;
+                _regionalSettings.CountryCode = SelectedCurrency.CountryCode;
+                _regionalSettings.CultureName = SelectedCurrency.CultureName;
+            }
+
+            await _regionalSettingsService.SaveRegionalSettingsAsync(_regionalSettings, ct);
+            _currencyFormatter.UpdateSettings(_regionalSettings);
+
+            if (SelectedLanguage != null)
+            {
+                _languageService.SetLanguage(SelectedLanguage.Code);
+            }
+
+            RegionalSaveMessage = "Company regional settings and workstation language saved successfully.";
+            await LoadRegionalSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            RegionalSaveMessage = $"Failed saving regional settings: {ex.Message}";
+        }
+        finally
+        {
+            IsSavingRegional = false;
+        }
+    }
 
     private void LoadProfileDetails(string profileName)
     {
@@ -216,24 +377,38 @@ public class SettingsViewModel : ViewModelBase
 
         try
         {
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string appFolder = Path.Combine(appData, "PharmaERP");
-            Directory.CreateDirectory(appFolder);
-
-            string settingsFile = Path.Combine(appFolder, "settings.json");
-
-            var settingsDoc = new
+            var config = new PharmaERP.Application.Common.Models.DatabaseConnectionConfig
             {
-                DatabaseConfig = new
-                {
-                    ActiveProfile = SelectedProfile
-                }
+                ActiveProfile = SelectedProfile,
+                Description = ProfileDescription
             };
 
-            string json = JsonSerializer.Serialize(settingsDoc, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(settingsFile, json);
+            switch (SelectedProfile.ToUpperInvariant())
+            {
+                case "DEVELOPMENT":
+                    config.Server = "(localdb)\\mssqllocaldb";
+                    config.Database = "PharmaERP_Dev";
+                    config.AuthType = PharmaERP.Application.Common.Models.DatabaseAuthType.Windows;
+                    config.TrustServerCertificate = true;
+                    break;
+                case "LAN":
+                    config.Server = "192.168.1.100,1433";
+                    config.Database = "PharmaERP";
+                    config.AuthType = PharmaERP.Application.Common.Models.DatabaseAuthType.Windows;
+                    config.TrustServerCertificate = true;
+                    break;
+                case "LOCAL":
+                default:
+                    config.Server = ".\\SQLEXPRESS";
+                    config.Database = "PharmaERP";
+                    config.AuthType = PharmaERP.Application.Common.Models.DatabaseAuthType.Windows;
+                    config.TrustServerCertificate = true;
+                    break;
+            }
 
-            SaveMessage = $"Active profile set to '{SelectedProfile}' in {settingsFile}. Please restart the application for this setting to take effect.";
+            _databaseConfigStore.SaveConfig(config);
+
+            SaveMessage = $"Active profile set to '{SelectedProfile}' in canonical settings. Please restart the application for this setting to take effect.";
         }
         catch (Exception ex)
         {

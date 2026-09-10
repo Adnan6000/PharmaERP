@@ -278,5 +278,13 @@ public class ProductBatchRepository : IProductBatchRepository
 
         return new PagedResult<ExpiryReportItemDto>(items, totalCount, query.PageNumber, query.PageSize);
     }
+
+    public async Task<decimal> GetTotalInventoryValuationAsync(CancellationToken cancellationToken = default)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync(cancellationToken);
+        return await context.ProductBatches
+            .AsNoTracking()
+            .SumAsync(b => b.InventoryValue, cancellationToken);
+    }
 }
 

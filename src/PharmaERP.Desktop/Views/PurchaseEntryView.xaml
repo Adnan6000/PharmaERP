@@ -203,7 +203,7 @@
                 <StackPanel Grid.Column="8" Margin="0,0,8,0">
                     <TextBlock Text="Total" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                     <Border Background="{StaticResource Brush.Surface.Muted}" Height="30" Padding="6,0">
-                        <TextBlock Text="{Binding LineEstimatedTotal, StringFormat={}{0:C2}}"
+                        <TextBlock Text="{Binding LineEstimatedTotal, Converter={StaticResource CurrencyConverter}}"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center" />
                     </Border>
@@ -235,10 +235,10 @@
                     <DataGridTextColumn Header="Batch #" Binding="{Binding BatchNumber}" Width="120" />
                     <DataGridTextColumn Header="Expiry Date" Binding="{Binding ExpiryDate, StringFormat={}{0:yyyy-MM-dd}}" Width="110" />
                     <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity, StringFormat={}{0:N2}}" Width="100" FontWeight="Bold" />
-                    <DataGridTextColumn Header="Purchase Rate" Binding="{Binding PurchaseRate, StringFormat={}{0:C2}}" Width="120" />
-                    <DataGridTextColumn Header="Sale Rate" Binding="{Binding SuggestedSaleRate, StringFormat={}{0:C2}}" Width="110" />
-                    <DataGridTextColumn Header="Discount" Binding="{Binding DiscountAmount, StringFormat={}{0:C2}}" Width="100" />
-                    <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, StringFormat={}{0:C2}}" Width="130" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Purchase Rate" Binding="{Binding PurchaseRate, Converter={StaticResource CurrencyConverter}}" Width="120" />
+                    <DataGridTextColumn Header="Sale Rate" Binding="{Binding SuggestedSaleRate, Converter={StaticResource CurrencyConverter}}" Width="110" />
+                    <DataGridTextColumn Header="Discount" Binding="{Binding DiscountAmount, Converter={StaticResource CurrencyConverter}}" Width="100" />
+                    <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, Converter={StaticResource CurrencyConverter}}" Width="130" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" IsReadOnly="True" />
 
                     <DataGridTemplateColumn Header="Action" Width="80">
                         <DataGridTemplateColumn.CellTemplate>
@@ -308,17 +308,17 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
                     <StackPanel Margin="0,0,20,0">
                         <TextBlock Text="Gross Total:" Foreground="{StaticResource Brush.Text.Muted}" FontSize="11" />
-                        <TextBlock Text="{Binding GrossTotal, StringFormat={}{0:C2}}" FontWeight="SemiBold" FontSize="13" />
+                        <TextBlock Text="{Binding GrossTotal, Converter={StaticResource CurrencyConverter}}" FontWeight="SemiBold" FontSize="13" />
                     </StackPanel>
 
                     <StackPanel Margin="0,0,20,0">
                         <TextBlock Text="Discount:" Foreground="{StaticResource Brush.Text.Muted}" FontSize="11" />
-                        <TextBlock Text="{Binding TotalDiscount, StringFormat={}{0:C2}}" FontWeight="SemiBold" FontSize="13" Foreground="#D97706" />
+                        <TextBlock Text="{Binding TotalDiscount, Converter={StaticResource CurrencyConverter}}" FontWeight="SemiBold" FontSize="13" Foreground="#D97706" />
                     </StackPanel>
 
                     <StackPanel>
                         <TextBlock Text="Net Payable Total:" Foreground="{StaticResource Brush.Text.Muted}" FontSize="11" />
-                        <TextBlock Text="{Binding NetTotal, StringFormat={}{0:C2}}" FontWeight="Bold" FontSize="18" Foreground="{StaticResource Brush.Primary}" />
+                        <TextBlock Text="{Binding NetTotal, Converter={StaticResource CurrencyConverter}}" FontWeight="Bold" FontSize="18" Foreground="{StaticResource Brush.Primary}" />
                     </StackPanel>
                 </StackPanel>
 

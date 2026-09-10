@@ -111,7 +111,7 @@
                 <Border Style="{StaticResource Card.Stat}" Margin="0,0,12,0">
                     <StackPanel>
                         <TextBlock Text="TODAY'S NET SALES" Style="{StaticResource Text.Muted}" FontWeight="Bold" />
-                        <TextBlock Text="{Binding TodayNetSales, StringFormat='Rs. {0:N2}'}"
+                        <TextBlock Text="{Binding TodayNetSales, Converter={StaticResource CurrencyConverter}}"
                                    FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" Margin="0,6,0,4" />
                         <TextBlock Text="Net revenue after returns" Foreground="{StaticResource Brush.Text.Secondary}" FontSize="11" />
                     </StackPanel>
@@ -131,7 +131,7 @@
                 <Border Style="{StaticResource Card.Stat}" Margin="0,0,12,0">
                     <StackPanel>
                         <TextBlock Text="GROSS SALES" Style="{StaticResource Text.Muted}" FontWeight="Bold" />
-                        <TextBlock Text="{Binding TodaySalesTotal, StringFormat='Rs. {0:N2}'}"
+                        <TextBlock Text="{Binding TodaySalesTotal, Converter={StaticResource CurrencyConverter}}"
                                    FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.Text.Primary}" Margin="0,6,0,4" />
                         <TextBlock Text="Total billed before returns" Foreground="{StaticResource Brush.Text.Secondary}" FontSize="11" />
                     </StackPanel>
@@ -141,7 +141,7 @@
                 <Border Style="{StaticResource Card.Stat}">
                     <StackPanel>
                         <TextBlock Text="CUSTOMER RETURNS" Style="{StaticResource Text.Muted}" FontWeight="Bold" />
-                        <TextBlock Text="{Binding TodayReturnsTotal, StringFormat='Rs. {0:N2}'}"
+                        <TextBlock Text="{Binding TodayReturnsTotal, Converter={StaticResource CurrencyConverter}}"
                                    FontSize="22" FontWeight="Bold" Foreground="Crimson" Margin="0,6,0,4" />
                         <TextBlock Text="{Binding TodayReturnCount, StringFormat='{}{0} return(s) processed'}" Foreground="{StaticResource Brush.Text.Secondary}" FontSize="11" />
                     </StackPanel>
