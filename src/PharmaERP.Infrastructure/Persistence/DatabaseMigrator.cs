@@ -416,7 +416,10 @@ public class DatabaseMigrator : IDatabaseMigrator
         var existingReg = await context.AppConfigs.FirstOrDefaultAsync(c => c.Key == "Regional.CurrencyCode", cancellationToken);
         if (existingReg == null)
         {
-            _logger.LogInformation("Establishing initial regional settings: {Country}/{Currency} ({Symbol})", reg.CountryCode, reg.CurrencyCode, reg.CurrencySymbol);
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Establishing initial regional settings: {Country}/{Currency} ({Symbol})", reg.CountryCode, reg.CurrencyCode, reg.CurrencySymbol);
+            }
             context.AppConfigs.AddRange(
                 new AppConfig { Key = "Regional.CountryCode", Value = reg.CountryCode, Description = "Company country code" },
                 new AppConfig { Key = "Regional.CurrencyCode", Value = reg.CurrencyCode, Description = "Company base currency code" },
