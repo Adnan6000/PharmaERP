@@ -1,4 +1,4 @@
-<Window x:Class="PharmaERP.Desktop.Views.DatabaseSetupWindow"
+﻿<Window x:Class="PharmaERP.Desktop.Views.DatabaseSetupWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,7 +7,8 @@
         xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
         mc:Ignorable="d"
         Title="PharmaERP — Database Setup &amp; First-Run Configuration"
-        Width="700" Height="730"
+        Width="720" Height="640"
+        MinWidth="580" MinHeight="500"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
         Background="{StaticResource Brush.Background}"
@@ -21,7 +22,7 @@
         <conv:NullToVisibilityConverter x:Key="NullToVis" />
     </Window.Resources>
 
-    <Grid Margin="28,24">
+    <Grid Margin="24,20">
         <Grid.RowDefinitions>
             <!-- Header -->
             <RowDefinition Height="Auto" />
@@ -32,7 +33,7 @@
         </Grid.RowDefinitions>
 
         <!-- 1. HEADER -->
-        <Border Grid.Row="0" Margin="0,0,0,16" Padding="0,0,0,12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Margin="0,0,0,14" Padding="0,0,0,10" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
             <StackPanel>
                 <TextBlock Text="PharmaERP Database Setup"
                            Style="{StaticResource Text.Display}"
@@ -47,11 +48,11 @@
         </Border>
 
         <!-- 2. BODY -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16" Padding="0,0,8,0">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,12" Padding="0,0,8,0">
             <StackPanel>
 
                 <!-- STATUS MESSAGE BANNER -->
-                <Border CornerRadius="6" Padding="14,10" Margin="0,0,0,16" BorderThickness="1">
+                <Border CornerRadius="6" Padding="14,10" Margin="0,0,0,14" BorderThickness="1">
                     <Border.Style>
                         <Style TargetType="Border">
                             <!-- Default Info -->
@@ -107,7 +108,7 @@
                 </Border>
 
                 <!-- SERVER & DATABASE CARD -->
-                <Border Style="{StaticResource Card.Default}" Margin="0,0,0,16">
+                <Border Style="{StaticResource Card.Default}" Margin="0,0,0,14">
                     <StackPanel>
                         <TextBlock Text="SQL Server Connection" Style="{StaticResource Text.Subheading}" Margin="0,0,0,12" />
 
@@ -116,6 +117,7 @@
                         <ComboBox ItemsSource="{Binding ServerSuggestions}"
                                   Text="{Binding Server, UpdateSourceTrigger=PropertyChanged}"
                                   IsEditable="True"
+                                  MaxDropDownHeight="200"
                                   Height="32"
                                   Margin="0,0,0,12" />
 
@@ -156,22 +158,23 @@
                         </StackPanel>
 
                         <!-- Security Options -->
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <CheckBox Content="Trust Server Certificate (Recommended for self-signed / local Express)"
+                        <WrapPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <CheckBox Content="Trust Server Certificate (Recommended for local/self-signed)"
                                       IsChecked="{Binding TrustServerCertificate}"
-                                      Margin="0,0,20,0"
+                                      Margin="0,0,20,6"
                                       VerticalContentAlignment="Center" />
                             <CheckBox Content="Encrypt Connection"
                                       IsChecked="{Binding Encrypt}"
+                                      Margin="0,0,0,6"
                                       VerticalContentAlignment="Center" />
-                        </StackPanel>
+                        </WrapPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- FIRST-TIME REGIONAL & COMPANY PROFILE CARD -->
                 <Border Style="{StaticResource Card.Default}"
                         Visibility="{Binding IsFirstTimeSetup, Converter={StaticResource BoolToVis}}"
-                        Margin="0,0,0,16">
+                        Margin="0,0,0,14">
                     <StackPanel>
                         <TextBlock Text="Initial Company &amp; Regional Setup" Style="{StaticResource Text.Subheading}" Margin="0,0,0,4" />
                         <TextBlock Text="Configured once upon creating a new database. Pakistani defaults are preselected."
@@ -198,6 +201,7 @@
                                 <ComboBox ItemsSource="{Binding CuratedCurrencies}"
                                           SelectedItem="{Binding SelectedCurrency}"
                                           DisplayMemberPath="DisplayName"
+                                          MaxDropDownHeight="220"
                                           Height="32" />
                             </StackPanel>
 
@@ -207,28 +211,61 @@
                                 <ComboBox ItemsSource="{Binding SupportedLanguages}"
                                           SelectedItem="{Binding SelectedLanguage}"
                                           DisplayMemberPath="NativeName"
+                                          MaxDropDownHeight="220"
                                           Height="32" />
                             </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- PREVIEW CONNECTION STRING -->
-                <Border Background="{StaticResource Brush.Surface}"
-                        BorderBrush="{StaticResource Brush.Border}"
-                        BorderThickness="1"
-                        CornerRadius="6"
-                        Padding="12"
-                        Margin="0,0,0,8">
+                <!-- FRIENDLY STRUCTURED CONNECTION SUMMARY CARD -->
+                <Border Style="{StaticResource Card.Default}" Margin="0,0,0,8" Padding="14">
                     <StackPanel>
-                        <TextBlock Text="Generated Connection String (Credentials Masked):"
-                                   Style="{StaticResource Form.Label}"
-                                   FontSize="10" />
-                        <TextBlock Text="{Binding MaskedConnectionString}"
-                                   FontFamily="Consolas"
-                                   FontSize="11"
-                                   Foreground="{StaticResource Brush.Text.Secondary}"
-                                   TextWrapping="Wrap" />
+                        <TextBlock Text="Connection Summary" Style="{StaticResource Text.Subheading}" FontSize="13" Margin="0,0,0,8" />
+                        <UniformGrid Columns="2" Margin="0,0,0,6">
+                            <StackPanel Margin="0,0,12,6">
+                                <TextBlock Text="Server:" Style="{StaticResource Form.Label}" FontSize="11" Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding Server, FallbackValue='(Not configured)'}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,6">
+                                <TextBlock Text="Target Database:" Style="{StaticResource Form.Label}" FontSize="11" Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding Database, FallbackValue='(Not configured)'}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,6">
+                                <TextBlock Text="Authentication:" Style="{StaticResource Form.Label}" FontSize="11" Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding AuthDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                            <StackPanel Margin="0,0,0,6">
+                                <TextBlock Text="Security &amp; Encryption:" Style="{StaticResource Form.Label}" FontSize="11" Margin="0,0,0,2" />
+                                <TextBlock Text="{Binding SecurityDisplay}" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </UniformGrid>
+
+                        <!-- Advanced Details Expander -->
+                        <Expander Header="Advanced Connection Details (Masked Connection String)"
+                                  IsExpanded="False"
+                                  Margin="0,4,0,0"
+                                  Foreground="{StaticResource Brush.Text.Secondary}"
+                                  FontSize="11">
+                            <Border Background="{StaticResource Brush.Surface.Muted}"
+                                    BorderBrush="{StaticResource Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="10"
+                                    Margin="0,6,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Masked ADO.NET Connection String:" FontSize="10" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
+                                    <TextBox Text="{Binding MaskedConnectionString, Mode=OneWay}"
+                                             IsReadOnly="True"
+                                             TextWrapping="Wrap"
+                                             FontFamily="Consolas"
+                                             FontSize="11"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             Padding="0" />
+                                </StackPanel>
+                            </Border>
+                        </Expander>
                     </StackPanel>
                 </Border>
 
@@ -239,45 +276,43 @@
         <Border Grid.Row="2" Padding="0,12,0,0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
+                    <!-- Left action buttons -->
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <!-- Right action buttons -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Test Connection Button -->
-                <Button Grid.Column="0"
-                        Content="Test Connection"
-                        Command="{Binding TestConnectionCommand}"
-                        Style="{StaticResource Button.Outline}"
-                        Padding="14,8"
-                        Margin="0,0,10,0" />
+                <!-- Left actions: Test & Initialize -->
+                <WrapPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Test Connection"
+                            Command="{Binding TestConnectionCommand}"
+                            Style="{StaticResource Button.Outline}"
+                            Padding="14,8"
+                            Margin="0,0,10,6" />
 
-                <!-- Create / Initialize Database Button -->
-                <Button Grid.Column="1"
-                        Content="Create &amp; Initialize Database"
-                        Command="{Binding InitializeDatabaseCommand}"
-                        Style="{StaticResource Button.Outline}"
-                        Padding="14,8" />
+                    <Button Content="Create &amp; Initialize Database"
+                            Command="{Binding InitializeDatabaseCommand}"
+                            Style="{StaticResource Button.Outline}"
+                            Padding="14,8"
+                            Margin="0,0,10,6" />
+                </WrapPanel>
 
-                <!-- Cancel / Exit Button -->
-                <Button Grid.Column="3"
-                        Content="Cancel / Exit"
-                        Command="{Binding CancelCommand}"
-                        Style="{StaticResource Button.Outline}"
-                        Padding="14,8"
-                        Margin="0,0,10,0" />
+                <!-- Right actions: Cancel & Proceed -->
+                <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="Cancel / Exit"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource Button.Outline}"
+                            Padding="14,8"
+                            Margin="0,0,10,6" />
 
-                <!-- Save & Proceed Button -->
-                <Button Grid.Column="4"
-                        Content="Proceed to PharmaERP →"
-                        Command="{Binding SaveAndProceedCommand}"
-                        Style="{StaticResource Button.Primary}"
-                        Padding="16,8"
-                        FontWeight="Bold" />
+                    <Button Content="Proceed to PharmaERP →"
+                            Command="{Binding SaveAndProceedCommand}"
+                            Style="{StaticResource Button.Primary}"
+                            Padding="16,8"
+                            Margin="0,0,0,6"
+                            FontWeight="Bold" />
+                </WrapPanel>
             </Grid>
         </Border>
     </Grid>
 </Window>
-

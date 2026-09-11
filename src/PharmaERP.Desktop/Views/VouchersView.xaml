@@ -35,38 +35,39 @@
                            Foreground="{StaticResource Brush.Text.Secondary}" FontSize="13" Margin="0,4,0,12" />
 
                 <!-- Voucher Mode Tabs -->
-                <StackPanel Orientation="Horizontal">
+                <WrapPanel Orientation="Horizontal">
                     <RadioButton Content="📥 Receipt Vouchers (RV)"
                                  GroupName="VoucherTabs"
                                  IsChecked="True"
                                  Command="{Binding SwitchTabCommand}"
                                  CommandParameter="Receipt"
-                                 Margin="0,0,16,0"
+                                 Margin="0,0,16,6"
                                  FontWeight="SemiBold" />
                     <RadioButton Content="📤 Payment Vouchers (PV)"
                                  GroupName="VoucherTabs"
                                  Command="{Binding SwitchTabCommand}"
                                  CommandParameter="Payment"
-                                 Margin="0,0,16,0"
+                                 Margin="0,0,16,6"
                                  FontWeight="SemiBold" />
                     <RadioButton Content="🔄 Contra Vouchers (CV)"
                                  GroupName="VoucherTabs"
                                  Command="{Binding SwitchTabCommand}"
                                  CommandParameter="Contra"
-                                 Margin="0,0,16,0"
+                                 Margin="0,0,16,6"
                                  FontWeight="SemiBold" />
                     <RadioButton Content="⚖️ Journal Vouchers (JV)"
                                  GroupName="VoucherTabs"
                                  Command="{Binding SwitchTabCommand}"
                                  CommandParameter="Journal"
-                                 Margin="0,0,16,0"
+                                 Margin="0,0,16,6"
                                  FontWeight="SemiBold" />
                     <RadioButton Content="🏁 Opening Balances (OB)"
                                  GroupName="VoucherTabs"
                                  Command="{Binding SwitchTabCommand}"
                                  CommandParameter="OpeningBalance"
+                                 Margin="0,0,16,6"
                                  FontWeight="SemiBold" />
-                </StackPanel>
+                </WrapPanel>
             </StackPanel>
 
             <!-- Filter Toolbar -->

@@ -103,6 +103,8 @@ public class MainWindowViewModel : ViewModelBase
 
     public ConnectionStateStore ConnectionStore => _connectionStore;
 
+    public string AppVersionDisplay => AppVersionInfo.FullTitle;
+
     public string WindowTitle
     {
         get => _windowTitle;
@@ -142,7 +144,7 @@ public class MainWindowViewModel : ViewModelBase
             "Purchases" => _purchasesVm,
             "PurchaseEntry" => _purchaseEntryVm,
             "PurchaseReturns" => _purchaseReturnsVm,
-            "InventoryStock" => _inventoryStockVm,
+            "Inventory" or "InventoryStock" => _inventoryStockVm,
             "OpeningStock" => _openingStockVm,
             "Products" => _productsVm,
             "Customers" => _customersVm,

@@ -145,6 +145,7 @@ public class DatabaseSetupViewModel : ViewModelBase
             if (SetField(ref _isWindowsAuth, value))
             {
                 OnPropertyChanged(nameof(IsSqlAuth));
+                OnPropertyChanged(nameof(AuthDisplay));
                 OnPropertyChanged(nameof(MaskedConnectionString));
                 CanProceed = false;
             }
@@ -165,6 +166,7 @@ public class DatabaseSetupViewModel : ViewModelBase
             if (SetField(ref _userName, value))
             {
                 CanProceed = false;
+                OnPropertyChanged(nameof(AuthDisplay));
                 OnPropertyChanged(nameof(MaskedConnectionString));
             }
         }
@@ -191,6 +193,7 @@ public class DatabaseSetupViewModel : ViewModelBase
             if (SetField(ref _encrypt, value))
             {
                 CanProceed = false;
+                OnPropertyChanged(nameof(SecurityDisplay));
                 OnPropertyChanged(nameof(MaskedConnectionString));
             }
         }
@@ -204,10 +207,15 @@ public class DatabaseSetupViewModel : ViewModelBase
             if (SetField(ref _trustServerCertificate, value))
             {
                 CanProceed = false;
+                OnPropertyChanged(nameof(SecurityDisplay));
                 OnPropertyChanged(nameof(MaskedConnectionString));
             }
         }
     }
+
+    public string AuthDisplay => IsWindowsAuth ? "Windows Authentication" : (string.IsNullOrWhiteSpace(UserName) ? "SQL Server Authentication" : $"SQL Server Auth ({UserName})");
+
+    public string SecurityDisplay => (TrustServerCertificate ? "Trust Certificate" : "Validate Certificate") + (Encrypt ? " (Encrypted)" : " (Unencrypted)");
 
     public string CompanyName
     {

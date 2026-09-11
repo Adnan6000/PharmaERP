@@ -112,3 +112,20 @@ public class ConnectionStatusToBrushConverter : IValueConverter
     }
 }
 
+public class EqualityToActiveTagConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value != null && parameter != null && string.Equals(value.ToString(), parameter.ToString(), StringComparison.OrdinalIgnoreCase))
+        {
+            return "Active";
+        }
+        return "Inactive";
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
+    }
+}
+

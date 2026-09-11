@@ -59,41 +59,42 @@
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <!-- Supplier Selector -->
-                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="2*" MinWidth="180" />
                         <!-- Supplier Bill # -->
-                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="1.2*" MinWidth="120" />
                         <!-- Invoice Date -->
-                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="1*" MinWidth="110" />
                         <!-- Due Date -->
-                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="1*" MinWidth="110" />
                         <!-- Remarks -->
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="2*" MinWidth="140" />
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
                         <TextBlock Text="Supplier *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <ComboBox ItemsSource="{Binding Suppliers}"
                                   SelectedItem="{Binding SelectedSupplier}"
                                   DisplayMemberPath="Name"
                                   Height="32"
+                                  MaxDropDownHeight="220"
                                   VerticalContentAlignment="Center" />
                     </StackPanel>
 
-                    <StackPanel Grid.Column="1" Margin="0,0,12,0">
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
                         <TextBlock Text="Supplier Bill / Inv #" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding SupplierInvoiceNumber, UpdateSourceTrigger=PropertyChanged}"
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2" Margin="0,0,12,0">
+                    <StackPanel Grid.Column="2" Margin="0,0,10,0">
                         <TextBlock Text="Invoice Date *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <DatePicker SelectedDate="{Binding InvoiceDate}"
                                     Height="32"
                                     VerticalContentAlignment="Center" />
                     </StackPanel>
 
-                    <StackPanel Grid.Column="3" Margin="0,0,12,0">
+                    <StackPanel Grid.Column="3" Margin="0,0,10,0">
                         <TextBlock Text="Due Date" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <DatePicker SelectedDate="{Binding DueDate}"
                                     Height="32"
@@ -110,7 +111,7 @@
             </Grid>
         </Border>
 
-        <!-- 2. LINE ENTRY STRIP -->
+        <!-- 2. LINE ENTRY STRIP (Responsive 2-Row Layout) -->
         <Border Grid.Row="1"
                 Background="{StaticResource Brush.Surface}"
                 BorderBrush="{StaticResource Brush.Border}"
@@ -119,103 +120,121 @@
                 Padding="16,12"
                 Margin="0,0,0,12">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <!-- Product -->
-                    <ColumnDefinition Width="220" />
-                    <!-- Batch -->
-                    <ColumnDefinition Width="130" />
-                    <!-- Expiry -->
-                    <ColumnDefinition Width="130" />
-                    <!-- Mfg Date -->
-                    <ColumnDefinition Width="130" />
-                    <!-- Qty -->
-                    <ColumnDefinition Width="90" />
-                    <!-- Rate -->
-                    <ColumnDefinition Width="100" />
-                    <!-- Sale Rate -->
-                    <ColumnDefinition Width="100" />
-                    <!-- Discount -->
-                    <ColumnDefinition Width="90" />
-                    <!-- Line Total -->
-                    <ColumnDefinition Width="100" />
-                    <!-- Add Button -->
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <!-- Row 0: Product & Dates -->
+                    <RowDefinition Height="Auto" />
+                    <!-- Row 1: Quantity, Rates, Total & Add Button -->
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                    <TextBlock Text="Product *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <ComboBox ItemsSource="{Binding Products}"
-                              SelectedItem="{Binding SelectedProductForLine}"
-                              DisplayMemberPath="Name"
-                              Height="30"
-                              VerticalContentAlignment="Center" />
-                </StackPanel>
+                <!-- Row 0: Product & Dates -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <!-- Product -->
+                        <ColumnDefinition Width="3*" MinWidth="180" />
+                        <!-- Batch -->
+                        <ColumnDefinition Width="1.5*" MinWidth="110" />
+                        <!-- Expiry -->
+                        <ColumnDefinition Width="1.5*" MinWidth="120" />
+                        <!-- Mfg Date -->
+                        <ColumnDefinition Width="1.5*" MinWidth="120" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                    <TextBlock Text="Batch #" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <TextBox Text="{Binding LineBatchNumber, UpdateSourceTrigger=PropertyChanged}"
-                             Height="30"
-                             VerticalContentAlignment="Center" />
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Product *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <ComboBox ItemsSource="{Binding Products}"
+                                  SelectedItem="{Binding SelectedProductForLine}"
+                                  DisplayMemberPath="Name"
+                                  Height="32"
+                                  MaxDropDownHeight="220"
+                                  VerticalContentAlignment="Center" />
+                    </StackPanel>
 
-                <StackPanel Grid.Column="2" Margin="0,0,8,0">
-                    <TextBlock Text="Expiry Date *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <DatePicker SelectedDate="{Binding LineExpiryDate}"
-                                Height="30"
-                                VerticalContentAlignment="Center" />
-                </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Batch #" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding LineBatchNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 Height="32"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
 
-                <StackPanel Grid.Column="3" Margin="0,0,8,0">
-                    <TextBlock Text="Mfg Date" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <DatePicker SelectedDate="{Binding LineManufacturingDate}"
-                                Height="30"
-                                VerticalContentAlignment="Center" />
-                </StackPanel>
+                    <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                        <TextBlock Text="Expiry Date *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <DatePicker SelectedDate="{Binding LineExpiryDate}"
+                                    Height="32"
+                                    VerticalContentAlignment="Center" />
+                    </StackPanel>
 
-                <StackPanel Grid.Column="4" Margin="0,0,8,0">
-                    <TextBlock Text="Quantity *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <TextBox Text="{Binding LineQuantity, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
-                             Height="30"
-                             VerticalContentAlignment="Center" />
-                </StackPanel>
+                    <StackPanel Grid.Column="3">
+                        <TextBlock Text="Mfg Date" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <DatePicker SelectedDate="{Binding LineManufacturingDate}"
+                                    Height="32"
+                                    VerticalContentAlignment="Center" />
+                    </StackPanel>
+                </Grid>
 
-                <StackPanel Grid.Column="5" Margin="0,0,8,0">
-                    <TextBlock Text="Purchase Rate *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <TextBox Text="{Binding LinePurchaseRate, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
-                             Height="30"
-                             VerticalContentAlignment="Center" />
-                </StackPanel>
+                <!-- Row 1: Quantity, Rates, Discounts, Total & Action Button -->
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <!-- Qty -->
+                        <ColumnDefinition Width="1*" MinWidth="80" />
+                        <!-- Purchase Rate -->
+                        <ColumnDefinition Width="1.2*" MinWidth="90" />
+                        <!-- Sale Rate -->
+                        <ColumnDefinition Width="1.2*" MinWidth="90" />
+                        <!-- Discount -->
+                        <ColumnDefinition Width="1*" MinWidth="80" />
+                        <!-- Line Total -->
+                        <ColumnDefinition Width="1.4*" MinWidth="100" />
+                        <!-- Add Button -->
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="6" Margin="0,0,8,0">
-                    <TextBlock Text="Sale Rate" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <TextBox Text="{Binding LineSuggestedSaleRate, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
-                             Height="30"
-                             VerticalContentAlignment="Center" />
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                        <TextBlock Text="Quantity *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding LineQuantity, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 Height="32"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
 
-                <StackPanel Grid.Column="7" Margin="0,0,8,0">
-                    <TextBlock Text="Discount" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <TextBox Text="{Binding LineDiscountAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
-                             Height="30"
-                             VerticalContentAlignment="Center" />
-                </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+                        <TextBlock Text="Purchase Rate *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding LinePurchaseRate, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 Height="32"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
 
-                <StackPanel Grid.Column="8" Margin="0,0,8,0">
-                    <TextBlock Text="Total" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
-                    <Border Background="{StaticResource Brush.Surface.Muted}" Height="30" Padding="6,0">
-                        <TextBlock Text="{Binding LineEstimatedTotal, Converter={StaticResource CurrencyConverter}}"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
-                    </Border>
-                </StackPanel>
+                    <StackPanel Grid.Column="2" Margin="0,0,10,0">
+                        <TextBlock Text="Sale Rate" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding LineSuggestedSaleRate, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 Height="32"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
 
-                <Button Grid.Column="9"
-                        Style="{StaticResource Button.Primary}"
-                        Content="➕ Add"
-                        Command="{Binding AddLineCommand}"
-                        VerticalAlignment="Bottom"
-                        Height="30"
-                        Padding="12,0" />
+                    <StackPanel Grid.Column="3" Margin="0,0,10,0">
+                        <TextBlock Text="Discount" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <TextBox Text="{Binding LineDiscountAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 Height="32"
+                                 VerticalContentAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="4" Margin="0,0,12,0">
+                        <TextBlock Text="Estimated Total" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
+                        <Border Background="{StaticResource Brush.Surface.Muted}" Height="32" Padding="8,0" CornerRadius="4">
+                            <TextBlock Text="{Binding LineEstimatedTotal, Converter={StaticResource CurrencyConverter}}"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center" />
+                        </Border>
+                    </StackPanel>
+
+                    <Button Grid.Column="5"
+                            Style="{StaticResource Button.Primary}"
+                            Content="➕ Add Line Item"
+                            Command="{Binding AddLineCommand}"
+                            VerticalAlignment="Bottom"
+                            Height="32"
+                            Padding="16,0"
+                            FontWeight="SemiBold" />
+                </Grid>
             </Grid>
         </Border>
 

@@ -47,7 +47,7 @@
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="border" Property="Background" Value="{StaticResource Brush.Surface.Hover}" />
-                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
                             <Setter Property="Cursor" Value="Arrow" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -126,7 +126,7 @@
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="border" Property="Background" Value="{StaticResource Brush.Surface.Hover}" />
-                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Secondary}" />
                             <Setter Property="Cursor" Value="Arrow" />
                         </Trigger>
                     </ControlTemplate.Triggers>
@@ -176,7 +176,7 @@
         <Setter Property="FontSize" Value="{StaticResource FontSize.Body}" />
         <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
-        <Setter Property="Padding" Value="14,10" />
+        <Setter Property="Padding" Value="10,8" />
         <Setter Property="Margin" Value="0,2" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Cursor" Value="Hand" />
@@ -186,7 +186,9 @@
                 <ControlTemplate TargetType="Button">
                     <Border x:Name="border"
                             Background="{TemplateBinding Background}"
-                            CornerRadius="6"
+                            BorderBrush="Transparent"
+                            BorderThickness="3,0,0,0"
+                            CornerRadius="0,6,6,0"
                             Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Left"
                                           VerticalAlignment="Center" />
@@ -198,6 +200,16 @@
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="border" Property="Background" Value="{StaticResource Brush.Surface.Hover}" />
+                        </Trigger>
+                        <Trigger Property="FlowDirection" Value="RightToLeft">
+                            <Setter TargetName="border" Property="BorderThickness" Value="0,0,3,0" />
+                            <Setter TargetName="border" Property="CornerRadius" Value="6,0,0,6" />
+                        </Trigger>
+                        <Trigger Property="Tag" Value="Active">
+                            <Setter TargetName="border" Property="Background" Value="#EFF6FF" />
+                            <Setter TargetName="border" Property="BorderBrush" Value="{StaticResource Brush.Primary}" />
+                            <Setter Property="Foreground" Value="{StaticResource Brush.Primary}" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

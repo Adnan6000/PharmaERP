@@ -9,10 +9,10 @@
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         Title="{Binding WindowTitle}"
-        Height="840"
-        Width="1280"
-        MinHeight="680"
-        MinWidth="1000"
+        Height="720"
+        Width="1200"
+        MinHeight="650"
+        MinWidth="1024"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Brush.Background}"
         TextElement.FontFamily="{StaticResource FontFamily.Default}"
@@ -23,6 +23,7 @@
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis" />
         <conv:NullToVisibilityConverter x:Key="NullToVis" />
         <conv:ConnectionStatusToBrushConverter x:Key="StatusToBrush" />
+        <conv:EqualityToActiveTagConverter x:Key="NavActiveConverter" />
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
 
         <!-- ViewModel to View Mappings -->
@@ -210,8 +211,8 @@
         <!-- MAIN BODY: SIDEBAR + ACTIVE VIEW CONTENT -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <!-- Sidebar -->
-                <ColumnDefinition Width="230" />
+                <!-- Sidebar (widened for comfortable typography and no clipping) -->
+                <ColumnDefinition Width="275" MinWidth="260" MaxWidth="300" />
                 <!-- Content Area -->
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
@@ -220,11 +221,20 @@
             <Border Grid.Column="0"
                     Background="{StaticResource Brush.Surface}"
                     BorderBrush="{StaticResource Brush.Border}"
-                    BorderThickness="0,0,1,0"
-                    Padding="12,14">
+                    Padding="10,12">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="BorderThickness" Value="0,0,1,0" />
+                        <Style.Triggers>
+                            <Trigger Property="FlowDirection" Value="RightToLeft">
+                                <Setter Property="BorderThickness" Value="1,0,0,0" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <DockPanel LastChildFill="True">
                     <!-- Navigation Menu Items -->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" DockPanel.Dock="Top">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,4,0" DockPanel.Dock="Top">
                         <StackPanel>
                             <!-- OPERATIONS SECTION -->
                             <TextBlock Text="OPERATIONS"
@@ -234,65 +244,72 @@
                                        Margin="10,0,0,6" />
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Dashboard}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Dashboard">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📊" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Dashboard" />
+                                    <TextBlock Text="Dashboard" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=SalesEntry}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="SalesEntry">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="💳" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="POS Counter" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" />
+                                    <TextBlock Text="POS Counter" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Sales}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Sales">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🧾" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Sales History" />
+                                    <TextBlock Text="Sales History" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=SalesReturns}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="SalesReturns">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🔄" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Sales Returns" />
+                                    <TextBlock Text="Sales Returns" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=PurchaseEntry}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="PurchaseEntry">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🛒" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Purchase Entry (F2)" FontWeight="SemiBold" />
+                                    <TextBlock Text="Purchase Entry (F2)" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Purchases}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Purchases">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📋" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Purchase Invoices" />
+                                    <TextBlock Text="Purchase Invoices" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=PurchaseReturns}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="PurchaseReturns">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="↩️" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Purchase Returns" />
+                                    <TextBlock Text="Purchase Returns" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
@@ -304,20 +321,22 @@
                                        Margin="10,14,0,6" />
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Inventory}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Inventory">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📦" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Stock &amp; Expiry Tracker" />
+                                    <TextBlock Text="Stock &amp; Expiry Tracker" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=OpeningStock}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="OpeningStock">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📥" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Opening Stock Entry" />
+                                    <TextBlock Text="Opening Stock Entry" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
@@ -329,38 +348,42 @@
                                        Margin="10,14,0,6" />
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Ledgers}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Ledgers">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📘" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="General &amp; Subledgers" />
+                                    <TextBlock Text="General &amp; Subledgers" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Vouchers}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Vouchers">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📑" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Financial Vouchers" />
+                                    <TextBlock Text="Financial Vouchers" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=ChartOfAccounts}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="ChartOfAccounts">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🌲" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Chart of Accounts" />
+                                    <TextBlock Text="Chart of Accounts" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=AccountingSetup}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="AccountingSetup">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="⚖️" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Accounting Setup &amp; Audit" />
+                                    <TextBlock Text="Accounting Setup &amp; Audit" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
@@ -372,56 +395,62 @@
                                        Margin="10,14,0,6" />
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Products}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Products">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="💊" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Product Catalog" />
+                                    <TextBlock Text="Product Catalog" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Customers}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Customers">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="👥" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Customers" />
+                                    <TextBlock Text="Customers" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Suppliers}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Suppliers">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🚚" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Suppliers" />
+                                    <TextBlock Text="Suppliers" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Manufacturers}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Manufacturers">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🏭" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Manufacturers" />
+                                    <TextBlock Text="Manufacturers" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Categories}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Categories">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="🏷️" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Categories" />
+                                    <TextBlock Text="Categories" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Units}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Units">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="📏" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Units of Measure" />
+                                    <TextBlock Text="Units of Measure" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
 
@@ -433,11 +462,12 @@
                                        Margin="10,14,0,6" />
 
                             <Button Style="{StaticResource Button.Nav}"
+                                    Tag="{Binding SelectedNavSection, Converter={StaticResource NavActiveConverter}, ConverterParameter=Settings}"
                                     Command="{Binding NavigateCommand}"
                                     CommandParameter="Settings">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="⚙️" FontSize="14" Margin="0,0,10,0" />
-                                    <TextBlock Text="Database &amp; LAN" />
+                                    <TextBlock Text="Database &amp; LAN" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -496,7 +526,7 @@
                 </StackPanel>
 
                 <TextBlock Grid.Column="1"
-                           Text="PharmaERP v1.0.0"
+                           Text="{Binding AppVersionDisplay}"
                            Style="{StaticResource Text.Muted}"
                            FontSize="11"
                            VerticalAlignment="Center" />

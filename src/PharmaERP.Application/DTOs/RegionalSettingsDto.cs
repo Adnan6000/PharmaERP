@@ -24,6 +24,10 @@ public record CurrencyDefinitionDto(
     string CountryCode,
     string CultureName)
 {
+    public string DisplayName => $"{CurrencyCode} — {CurrencyName} ({Symbol})";
+
+    public override string ToString() => DisplayName;
+
     public static readonly IReadOnlyList<CurrencyDefinitionDto> CuratedCurrencies = new List<CurrencyDefinitionDto>
     {
         new("PKR", "Pakistani Rupee", "Rs.", 2, "PK", "en-PK"),
