@@ -8,10 +8,13 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class ManufacturersViewModel : ViewModelBase
+public class ManufacturersViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IManufacturerService _manufacturerService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<ManufacturerDto> _items = [];
     private ManufacturerDto? _selectedItem;
@@ -38,16 +41,29 @@ public class ManufacturersViewModel : ViewModelBase
 
     public ManufacturersViewModel(
         IManufacturerService manufacturerService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _manufacturerService = manufacturerService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Items = new ReadOnlyObservableCollection<ManufacturerDto>(_items);
 
         RefreshCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await LoadDataAsync(ct),
             canExecute: _ => !IsLoading && !IsSaving);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.MasterChanged or UiDataChangeType.ProductChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         NewCommand = new RelayCommand(
             execute: _ => OpenNewDrawer(),
@@ -304,6 +320,8 @@ public class ManufacturersViewModel : ViewModelBase
             }
 
             CloseDrawer();
+            _eventBus?.Publish(UiDataChangeType.ManufacturerChanged);
+            _eventBus?.Publish(UiDataChangeType.MasterChanged);
             await LoadDataAsync(ct);
         }
         catch (DuplicateKeyException ex)
@@ -329,6 +347,8 @@ public class ManufacturersViewModel : ViewModelBase
         try
         {
             await _manufacturerService.ToggleActiveAsync(item.Id, item.RowVersion, ct);
+            _eventBus?.Publish(UiDataChangeType.ManufacturerChanged);
+            _eventBus?.Publish(UiDataChangeType.MasterChanged);
             await LoadDataAsync(ct);
         }
         catch (Exception ex)
@@ -337,11 +357,27 @@ public class ManufacturersViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadDataAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadDataAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

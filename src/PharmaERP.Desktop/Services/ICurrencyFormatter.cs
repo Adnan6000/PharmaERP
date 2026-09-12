@@ -1,4 +1,5 @@
 using System.Globalization;
+using PharmaERP.Application.Common.Helpers;
 using PharmaERP.Application.DTOs;
 
 namespace PharmaERP.Desktop.Services;
@@ -53,14 +54,12 @@ public class CurrencyFormatter : ICurrencyFormatter
 
     public string Format(decimal amount, bool includeSymbol = true)
     {
-        int dec = Math.Max(0, _settings.CurrencyDecimalPlaces);
-        string numberPart = amount.ToString($"N{dec}", _cultureInfo);
-
-        if (!includeSymbol)
-            return numberPart;
-
-        string symbol = string.IsNullOrWhiteSpace(_settings.CurrencySymbol) ? _settings.CurrencyCode : _settings.CurrencySymbol;
-        return $"{symbol} {numberPart}";
+        return CurrencyNormalizationHelper.Format(
+            amount,
+            _settings.CurrencyDecimalPlaces,
+            string.IsNullOrWhiteSpace(_settings.CurrencySymbol) ? _settings.CurrencyCode : _settings.CurrencySymbol,
+            _cultureInfo,
+            includeSymbol);
     }
 
     public string Format(decimal? amount, bool includeSymbol = true)

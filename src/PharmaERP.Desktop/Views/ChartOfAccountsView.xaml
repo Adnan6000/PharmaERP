@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:ChartOfAccountsViewModel}">
 
@@ -50,6 +51,7 @@
                     <!-- Search -->
                     <TextBox Grid.Column="0"
                              Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                             common:PlaceholderHelper.Placeholder="Search code or account name..."
                              Style="{StaticResource Form.Input}"
                              Margin="0,0,12,0" />
 
@@ -57,6 +59,8 @@
                     <ComboBox Grid.Column="1"
                               ItemsSource="{Binding AccountTypes}"
                               SelectedItem="{Binding SelectedTypeFilter}"
+                              common:ClearableHelper.IsClearable="True"
+                              common:PlaceholderHelper.Placeholder="All Account Types"
                               Margin="0,0,12,0" />
 
                     <!-- Right Buttons -->
@@ -137,10 +141,12 @@
 
                         <TextBlock Text="Account Code *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
                         <TextBox Text="{Binding FormAccountCode, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. 1010"
                                  Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Account Name *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
                         <TextBox Text="{Binding FormAccountName, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. Cash in Hand"
                                  Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Account Type *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
@@ -150,6 +156,7 @@
 
                         <TextBlock Text="Description" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
                         <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Optional account notes..."
                                  Style="{StaticResource Form.Input}"
                                  Height="60"
                                  TextWrapping="Wrap"

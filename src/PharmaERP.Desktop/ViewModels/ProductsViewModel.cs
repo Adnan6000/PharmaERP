@@ -9,10 +9,16 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class ProductsViewModel : ViewModelBase
+public class ProductsViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IProductService _productService;
+    private readonly ICategoryService _categoryService;
+    private readonly IManufacturerService _manufacturerService;
+    private readonly IUnitService _unitService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<ProductDto> _items = [];
     private readonly ObservableCollection<LookupDto> _categories = [];
@@ -21,6 +27,8 @@ public class ProductsViewModel : ViewModelBase
 
     private ProductDto? _selectedItem;
     private string _searchTerm = string.Empty;
+    private int? _selectedCategoryFilter;
+    private int? _selectedManufacturerFilter;
 
     private int _pageNumber = 1;
     private int _pageSize = 20;
@@ -52,14 +60,33 @@ public class ProductsViewModel : ViewModelBase
     private string? _formErrorMessage;
     private bool _isSaving;
 
+    // Quick-Add Master Overlay State
+    private bool _isQuickAddOpen;
+    private string _quickAddType = string.Empty; // Category, Manufacturer, Unit
+    private string _quickAddTitle = string.Empty;
+    private string _quickAddName = string.Empty;
+    private string _quickAddSecondary = string.Empty;
+    private string _quickAddSecondaryLabel = string.Empty;
+    private string _quickAddSecondaryWatermark = string.Empty;
+    private string? _quickAddErrorMessage;
+    private bool _quickAddIsSaving;
+
     private CancellationTokenSource? _searchDebounceCts;
 
     public ProductsViewModel(
         IProductService productService,
-        ConnectionStateStore connectionStore)
+        ICategoryService categoryService,
+        IManufacturerService manufacturerService,
+        IUnitService unitService,
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _productService = productService;
+        _categoryService = categoryService;
+        _manufacturerService = manufacturerService;
+        _unitService = unitService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Items = new ReadOnlyObservableCollection<ProductDto>(_items);
         Categories = new ReadOnlyObservableCollection<LookupDto>(_categories);
@@ -69,6 +96,17 @@ public class ProductsViewModel : ViewModelBase
         RefreshCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await RefreshAllAsync(ct),
             canExecute: _ => !IsLoading && !IsSaving);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.ProductChanged or UiDataChangeType.MasterChanged or UiDataChangeType.StockChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         FirstPageCommand = new AsyncRelayCommand(
             execute: async (_, ct) =>
@@ -146,9 +184,20 @@ public class ProductsViewModel : ViewModelBase
             execute: async (_, ct) =>
             {
                 SearchTerm = string.Empty;
+                _selectedCategoryFilter = null;
+                _selectedManufacturerFilter = null;
+                OnPropertyChanged(nameof(SelectedCategoryFilter));
+                OnPropertyChanged(nameof(SelectedManufacturerFilter));
                 PageNumber = 1;
                 await LoadDataAsync(ct);
             });
+
+        // Quick Add Commands
+        OpenQuickAddCategoryCommand = new RelayCommand(_ => OpenQuickAdd("Category"));
+        OpenQuickAddManufacturerCommand = new RelayCommand(_ => OpenQuickAdd("Manufacturer"));
+        OpenQuickAddUnitCommand = new RelayCommand(_ => OpenQuickAdd("Unit"));
+        SaveQuickAddCommand = new AsyncRelayCommand(async (_, ct) => await SaveQuickAddAsync(ct), _ => !QuickAddIsSaving);
+        CancelQuickAddCommand = new RelayCommand(_ => CloseQuickAdd());
 
         _connectionStore.ConnectionStateChanged += OnConnectionStateChanged;
 
@@ -159,6 +208,10 @@ public class ProductsViewModel : ViewModelBase
     public ReadOnlyObservableCollection<LookupDto> Categories { get; }
     public ReadOnlyObservableCollection<LookupDto> Manufacturers { get; }
     public ReadOnlyObservableCollection<LookupDto> Units { get; }
+
+    public bool HasCategories => Categories.Count > 0;
+    public bool HasManufacturers => Manufacturers.Count > 0;
+    public bool HasUnits => Units.Count > 0;
 
     public ConnectionStateStore ConnectionStore => _connectionStore;
 
@@ -176,6 +229,32 @@ public class ProductsViewModel : ViewModelBase
             if (SetField(ref _searchTerm, value))
             {
                 DebounceSearch();
+            }
+        }
+    }
+
+    public int? SelectedCategoryFilter
+    {
+        get => _selectedCategoryFilter;
+        set
+        {
+            if (SetField(ref _selectedCategoryFilter, value))
+            {
+                PageNumber = 1;
+                _ = LoadDataAsync(CancellationToken.None);
+            }
+        }
+    }
+
+    public int? SelectedManufacturerFilter
+    {
+        get => _selectedManufacturerFilter;
+        set
+        {
+            if (SetField(ref _selectedManufacturerFilter, value))
+            {
+                PageNumber = 1;
+                _ = LoadDataAsync(CancellationToken.None);
             }
         }
     }
@@ -319,6 +398,61 @@ public class ProductsViewModel : ViewModelBase
         private set => SetField(ref _isSaving, value);
     }
 
+    // Quick Add Properties
+    public bool IsQuickAddOpen
+    {
+        get => _isQuickAddOpen;
+        set => SetField(ref _isQuickAddOpen, value);
+    }
+
+    public string QuickAddType
+    {
+        get => _quickAddType;
+        private set => SetField(ref _quickAddType, value);
+    }
+
+    public string QuickAddTitle
+    {
+        get => _quickAddTitle;
+        private set => SetField(ref _quickAddTitle, value);
+    }
+
+    public string QuickAddName
+    {
+        get => _quickAddName;
+        set => SetField(ref _quickAddName, value);
+    }
+
+    public string QuickAddSecondary
+    {
+        get => _quickAddSecondary;
+        set => SetField(ref _quickAddSecondary, value);
+    }
+
+    public string QuickAddSecondaryLabel
+    {
+        get => _quickAddSecondaryLabel;
+        private set => SetField(ref _quickAddSecondaryLabel, value);
+    }
+
+    public string QuickAddSecondaryWatermark
+    {
+        get => _quickAddSecondaryWatermark;
+        private set => SetField(ref _quickAddSecondaryWatermark, value);
+    }
+
+    public string? QuickAddErrorMessage
+    {
+        get => _quickAddErrorMessage;
+        private set => SetField(ref _quickAddErrorMessage, value);
+    }
+
+    public bool QuickAddIsSaving
+    {
+        get => _quickAddIsSaving;
+        private set => SetField(ref _quickAddIsSaving, value);
+    }
+
     // Commands
     public ICommand RefreshCommand { get; }
     public ICommand FirstPageCommand { get; }
@@ -331,6 +465,11 @@ public class ProductsViewModel : ViewModelBase
     public ICommand CancelEditCommand { get; }
     public ICommand ToggleActiveCommand { get; }
     public ICommand ClearFiltersCommand { get; }
+    public ICommand OpenQuickAddCategoryCommand { get; }
+    public ICommand OpenQuickAddManufacturerCommand { get; }
+    public ICommand OpenQuickAddUnitCommand { get; }
+    public ICommand SaveQuickAddCommand { get; }
+    public ICommand CancelQuickAddCommand { get; }
 
     private void DebounceSearch()
     {
@@ -382,6 +521,10 @@ public class ProductsViewModel : ViewModelBase
 
             _units.Clear();
             foreach (var item in lookups.Units) _units.Add(item);
+
+            OnPropertyChanged(nameof(HasCategories));
+            OnPropertyChanged(nameof(HasManufacturers));
+            OnPropertyChanged(nameof(HasUnits));
         }
         catch (Exception ex)
         {
@@ -411,6 +554,8 @@ public class ProductsViewModel : ViewModelBase
             var pagedResult = await _productService.GetProductsPagedAsync(
                 query: query,
                 searchTerm: SearchTerm,
+                categoryId: SelectedCategoryFilter,
+                manufacturerId: SelectedManufacturerFilter,
                 cancellationToken: ct);
 
             _items.Clear();
@@ -463,6 +608,8 @@ public class ProductsViewModel : ViewModelBase
         _formRowVersion = null;
         FormErrorMessage = null;
         IsDrawerOpen = true;
+
+        _ = LoadLookupsAsync(CancellationToken.None);
     }
 
     public void OpenEditDrawer(ProductDto product)
@@ -483,12 +630,126 @@ public class ProductsViewModel : ViewModelBase
         _formRowVersion = product.RowVersion;
         FormErrorMessage = null;
         IsDrawerOpen = true;
+
+        _ = LoadLookupsAsync(CancellationToken.None);
     }
 
     public void CloseDrawer()
     {
         IsDrawerOpen = false;
+        IsQuickAddOpen = false;
         FormErrorMessage = null;
+    }
+
+    public void OpenQuickAdd(string type)
+    {
+        QuickAddType = type;
+        QuickAddName = string.Empty;
+        QuickAddSecondary = string.Empty;
+        QuickAddErrorMessage = null;
+
+        switch (type)
+        {
+            case "Category":
+                QuickAddTitle = "Quick Add Category";
+                QuickAddSecondaryLabel = "Description (Optional)";
+                QuickAddSecondaryWatermark = "e.g. Pain relief, antibiotics, vitamins";
+                break;
+            case "Manufacturer":
+                QuickAddTitle = "Quick Add Manufacturer";
+                QuickAddSecondaryLabel = "Contact Person (Optional)";
+                QuickAddSecondaryWatermark = "e.g. Sales Manager / Representative";
+                break;
+            case "Unit":
+                QuickAddTitle = "Quick Add Unit of Measure";
+                QuickAddSecondaryLabel = "Abbreviation *";
+                QuickAddSecondaryWatermark = "e.g. TAB, CAP, BTL";
+                break;
+        }
+
+        IsQuickAddOpen = true;
+    }
+
+    public void CloseQuickAdd()
+    {
+        IsQuickAddOpen = false;
+        QuickAddErrorMessage = null;
+    }
+
+    public async Task SaveQuickAddAsync(CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(QuickAddName))
+        {
+            QuickAddErrorMessage = "Name is required.";
+            return;
+        }
+
+        QuickAddIsSaving = true;
+        QuickAddErrorMessage = null;
+
+        try
+        {
+            int? newId = null;
+            if (QuickAddType == "Category")
+            {
+                var created = await _categoryService.CreateAsync(new CategoryUpsertDto
+                {
+                    Name = QuickAddName.Trim(),
+                    Description = string.IsNullOrWhiteSpace(QuickAddSecondary) ? null : QuickAddSecondary.Trim(),
+                    IsActive = true
+                }, ct);
+                newId = created.Id;
+            }
+            else if (QuickAddType == "Manufacturer")
+            {
+                var created = await _manufacturerService.CreateAsync(new ManufacturerUpsertDto
+                {
+                    Name = QuickAddName.Trim(),
+                    ContactPerson = string.IsNullOrWhiteSpace(QuickAddSecondary) ? null : QuickAddSecondary.Trim(),
+                    IsActive = true
+                }, ct);
+                newId = created.Id;
+            }
+            else if (QuickAddType == "Unit")
+            {
+                string abbr = string.IsNullOrWhiteSpace(QuickAddSecondary)
+                    ? (QuickAddName.Trim().Length <= 3 ? QuickAddName.Trim().ToUpperInvariant() : QuickAddName.Trim().Substring(0, 3).ToUpperInvariant())
+                    : QuickAddSecondary.Trim().ToUpperInvariant();
+
+                var created = await _unitService.CreateAsync(new UnitUpsertDto
+                {
+                    Name = QuickAddName.Trim(),
+                    Abbreviation = abbr,
+                    IsActive = true
+                }, ct);
+                newId = created.Id;
+            }
+
+            // Reload lookups immediately
+            await LoadLookupsAsync(ct);
+
+            // Auto-select newly created master item
+            if (newId.HasValue)
+            {
+                if (QuickAddType == "Category") FormCategoryId = newId.Value;
+                else if (QuickAddType == "Manufacturer") FormManufacturerId = newId.Value;
+                else if (QuickAddType == "Unit") FormUnitId = newId.Value;
+            }
+
+            IsQuickAddOpen = false;
+        }
+        catch (DuplicateKeyException ex)
+        {
+            QuickAddErrorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            QuickAddErrorMessage = $"Error saving {QuickAddType}: {ex.Message}";
+        }
+        finally
+        {
+            QuickAddIsSaving = false;
+        }
     }
 
     public async Task SaveProductAsync(CancellationToken ct)
@@ -536,6 +797,7 @@ public class ProductsViewModel : ViewModelBase
             }
 
             CloseDrawer();
+            _eventBus?.Publish(UiDataChangeType.ProductChanged);
             await LoadDataAsync(ct);
         }
         catch (DuplicateKeyException ex)
@@ -561,6 +823,7 @@ public class ProductsViewModel : ViewModelBase
         try
         {
             await _productService.ToggleActiveAsync(product.Id, product.RowVersion, ct);
+            _eventBus?.Publish(UiDataChangeType.ProductChanged);
             await LoadDataAsync(ct);
         }
         catch (Exception ex)
@@ -569,11 +832,27 @@ public class ProductsViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await RefreshAllAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await RefreshAllAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

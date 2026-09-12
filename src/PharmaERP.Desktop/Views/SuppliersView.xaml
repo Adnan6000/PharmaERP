@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SuppliersViewModel}">
 
@@ -83,6 +84,7 @@
 
                     <Grid Grid.Column="0">
                         <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Search suppliers by name, code, phone..."
                                  Padding="28,6,8,6"
                                  VerticalContentAlignment="Center" />
                         <TextBlock Text="🔍"
@@ -283,19 +285,29 @@
                     <ScrollViewer Grid.Row="1" Padding="20,16">
                         <StackPanel>
                             <TextBlock Text="Supplier Code (Auto if blank)" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <TextBox Text="{Binding FormSupplierCode, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormSupplierCode, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="Auto-generated if blank"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Supplier Name *" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. Standard Pharma Distribution"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Contact Person" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <TextBox Text="{Binding FormContactPerson, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormContactPerson, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. Rashid Ali"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Phone Number" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <TextBox Text="{Binding FormPhone, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormPhone, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. 0321-9876543"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Address" FontWeight="SemiBold" Margin="0,0,0,4" />
-                            <TextBox Text="{Binding FormAddress, UpdateSourceTrigger=PropertyChanged}" Height="60" TextWrapping="Wrap" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormAddress, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="Warehouse / Office address..."
+                                     Height="60" TextWrapping="Wrap" Margin="0,0,0,14" />
 
                             <CheckBox Content="Active Supplier" IsChecked="{Binding FormIsActive}" Margin="0,4,0,14" />
 

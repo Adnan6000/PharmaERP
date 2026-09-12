@@ -8,11 +8,14 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class SalesReturnsViewModel : ViewModelBase
+public class SalesReturnsViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly ISaleReturnService _returnService;
     private readonly ISaleService _saleService;
     private readonly ILogger<SalesReturnsViewModel> _logger;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     // Search original invoice
     private string _invoiceSearchNumber = string.Empty;
@@ -34,16 +37,29 @@ public class SalesReturnsViewModel : ViewModelBase
     public SalesReturnsViewModel(
         ISaleReturnService returnService,
         ISaleService saleService,
-        ILogger<SalesReturnsViewModel> logger)
+        ILogger<SalesReturnsViewModel> logger,
+        IUiDataChangeBus? eventBus = null)
     {
         _returnService = returnService;
         _saleService = saleService;
         _logger = logger;
+        _eventBus = eventBus;
 
         SearchOriginalInvoiceCommand = new AsyncRelayCommand(SearchOriginalInvoiceAsync);
         PostReturnCommand = new AsyncRelayCommand(PostReturnAsync, () => ReturnItems.Any(i => i.ReturnQuantity > 0));
         CancelReturnCommand = new AsyncRelayCommand(CancelReturnAsync, () => SelectedPastReturn != null);
         RefreshHistoryCommand = new AsyncRelayCommand(LoadPastReturnsAsync);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.SaleReturned or UiDataChangeType.SalePosted or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         _ = LoadPastReturnsAsync();
     }
@@ -221,6 +237,8 @@ public class SalesReturnsViewModel : ViewModelBase
             var posted = await _returnService.PostReturnAsync(createDto);
             StatusMessage = $"Return posted successfully! Return #{posted.ReturnNumber} for {AppCurrency.Format(posted.TotalAmount)}";
             IsError = false;
+            _eventBus?.Publish(UiDataChangeType.SaleReturned);
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
 
             // Reset return form
             LoadedOriginalInvoice = null;
@@ -251,6 +269,8 @@ public class SalesReturnsViewModel : ViewModelBase
             var cancelled = await _returnService.CancelReturnAsync(SelectedPastReturn.Id, reason.Trim());
             StatusMessage = $"Return {cancelled.ReturnNumber} cancelled successfully.";
             IsError = false;
+            _eventBus?.Publish(UiDataChangeType.SaleReturned);
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
             await LoadPastReturnsAsync();
         }
         catch (Exception ex)
@@ -272,6 +292,31 @@ public class SalesReturnsViewModel : ViewModelBase
         {
             _logger.LogError(ex, "Failed to load return history.");
         }
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadPastReturnsAsync();
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadPastReturnsAsync();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }
 

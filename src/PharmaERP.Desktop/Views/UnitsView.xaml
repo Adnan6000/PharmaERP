@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:UnitsViewModel}">
 
@@ -70,6 +71,7 @@
                     Margin="0,0,0,14">
                 <Grid Width="360" HorizontalAlignment="Left">
                     <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                             common:PlaceholderHelper.Placeholder="Search units by name, abbr..."
                              Padding="28,6,8,6"
                              VerticalContentAlignment="Center" />
                     <TextBlock Text="🔍"
@@ -214,10 +216,14 @@
                             </Border>
 
                             <TextBlock Text="Unit Name *" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. Tablets"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Abbreviation (e.g. Tab, Cap, Btl)" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormAbbreviation, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16" />
+                            <TextBox Text="{Binding FormAbbreviation, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. Tab"
+                                     Margin="0,0,0,16" />
 
                             <CheckBox IsChecked="{Binding FormIsActive}" Content="Unit is active for product packaging" />
                         </StackPanel>

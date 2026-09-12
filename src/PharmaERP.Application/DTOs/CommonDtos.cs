@@ -1,6 +1,9 @@
 namespace PharmaERP.Application.DTOs;
 
-public record LookupDto(int Id, string Name, string? Code = null);
+public record LookupDto(int Id, string Name, string? Code = null)
+{
+    public override string ToString() => Name;
+}
 
 public record ProductLookupsDto(
     IReadOnlyList<LookupDto> Manufacturers,

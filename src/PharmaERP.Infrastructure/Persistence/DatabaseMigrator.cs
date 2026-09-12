@@ -119,6 +119,9 @@ public class DatabaseMigrator : IDatabaseMigrator
                 // 4. Idempotently seed system configuration & Accounting Setup Gate
                 await SeedSystemConfigIfEmptyAsync(context, initialRegionalSettings, initialCompanyName, cancellationToken);
 
+                // 5. Idempotently seed baseline Units of Measure
+                await SeedDefaultUnitsOfMeasureIfEmptyAsync(context, cancellationToken);
+
                 _logger.LogInformation("Database initialization, migration, and seeding completed successfully.");
                 return new DatabaseMigrationResult(true, "Database initialized, migrated, and verified successfully.");
             }
@@ -158,6 +161,7 @@ public class DatabaseMigrator : IDatabaseMigrator
         // Idempotently verify baseline seeds
         await SeedDefaultChartOfAccountsIfEmptyAsync(context, cancellationToken);
         await SeedSystemConfigIfEmptyAsync(context, null, null, cancellationToken);
+        await SeedDefaultUnitsOfMeasureIfEmptyAsync(context, cancellationToken);
 
         return new DatabaseMigrationResult(true, "Database upgraded successfully.");
     }
@@ -444,5 +448,51 @@ public class DatabaseMigrator : IDatabaseMigrator
         }
 
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task SeedDefaultUnitsOfMeasureIfEmptyAsync(
+        AppDbContext context,
+        CancellationToken cancellationToken)
+    {
+        var defaultUnits = new (string Name, string Abbreviation)[]
+        {
+            ("Tablet", "Tab"),
+            ("Capsule", "Cap"),
+            ("Strip", "Strip"),
+            ("Box", "Box"),
+            ("Bottle", "Btl"),
+            ("Vial", "Vial"),
+            ("Ampoule", "Amp"),
+            ("Tube", "Tube"),
+            ("Sachet", "Sach"),
+            ("Piece", "Pcs")
+        };
+
+        var existingUnits = await context.Units.AsNoTracking().ToListAsync(cancellationToken);
+        var existingNames = new HashSet<string>(existingUnits.Select(u => u.Name), StringComparer.OrdinalIgnoreCase);
+        var existingAbbrs = new HashSet<string>(existingUnits.Select(u => u.Abbreviation), StringComparer.OrdinalIgnoreCase);
+
+        bool addedAny = false;
+        foreach (var (name, abbr) in defaultUnits)
+        {
+            if (!existingNames.Contains(name) && !existingAbbrs.Contains(abbr))
+            {
+                context.Units.Add(new Unit
+                {
+                    Name = name,
+                    Abbreviation = abbr,
+                    IsActive = true
+                });
+                existingNames.Add(name);
+                existingAbbrs.Add(abbr);
+                addedAny = true;
+            }
+        }
+
+        if (addedAny)
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Default pharmaceutical units of measure seeded successfully.");
+        }
     }
 }

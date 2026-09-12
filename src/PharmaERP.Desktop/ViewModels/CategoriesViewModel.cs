@@ -8,10 +8,13 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class CategoriesViewModel : ViewModelBase
+public class CategoriesViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly ICategoryService _categoryService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<CategoryDto> _items = [];
     private CategoryDto? _selectedItem;
@@ -36,16 +39,29 @@ public class CategoriesViewModel : ViewModelBase
 
     public CategoriesViewModel(
         ICategoryService categoryService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _categoryService = categoryService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Items = new ReadOnlyObservableCollection<CategoryDto>(_items);
 
         RefreshCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await LoadDataAsync(ct),
             canExecute: _ => !IsLoading && !IsSaving);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.MasterChanged or UiDataChangeType.ProductChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         NewCommand = new RelayCommand(
             execute: _ => OpenNewDrawer(),
@@ -283,6 +299,8 @@ public class CategoriesViewModel : ViewModelBase
             }
 
             CloseDrawer();
+            _eventBus?.Publish(UiDataChangeType.CategoryChanged);
+            _eventBus?.Publish(UiDataChangeType.MasterChanged);
             await LoadDataAsync(ct);
         }
         catch (DuplicateKeyException ex)
@@ -308,6 +326,8 @@ public class CategoriesViewModel : ViewModelBase
         try
         {
             await _categoryService.ToggleActiveAsync(item.Id, item.RowVersion, ct);
+            _eventBus?.Publish(UiDataChangeType.CategoryChanged);
+            _eventBus?.Publish(UiDataChangeType.MasterChanged);
             await LoadDataAsync(ct);
         }
         catch (Exception ex)
@@ -316,11 +336,27 @@ public class CategoriesViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadDataAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadDataAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

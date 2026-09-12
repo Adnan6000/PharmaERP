@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:PurchasesViewModel}">
 
@@ -84,6 +85,7 @@
 
                     <Grid Grid.Column="0" Margin="0,0,10,0">
                         <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Search invoice # or supplier bill..."
                                  Padding="28,6,8,6"
                                  VerticalContentAlignment="Center" />
                         <TextBlock Text="🔍"
@@ -97,6 +99,8 @@
                               ItemsSource="{Binding Suppliers}"
                               SelectedItem="{Binding SelectedSupplierFilter}"
                               DisplayMemberPath="Name"
+                              common:ClearableHelper.IsClearable="True"
+                              common:PlaceholderHelper.Placeholder="Filter by supplier..."
                               Margin="0,0,10,0"
                               VerticalContentAlignment="Center" />
 

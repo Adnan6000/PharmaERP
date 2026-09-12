@@ -96,11 +96,14 @@ public class ReturnEntryLineItem : ViewModelBase
     }
 }
 
-public class PurchaseReturnsViewModel : ViewModelBase
+public class PurchaseReturnsViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IPurchaseService _purchaseService;
     private readonly ISupplierService _supplierService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<PurchaseReturnListDto> _returns = [];
     private readonly ObservableCollection<LookupDto> _suppliers = [];
@@ -147,11 +150,13 @@ public class PurchaseReturnsViewModel : ViewModelBase
     public PurchaseReturnsViewModel(
         IPurchaseService purchaseService,
         ISupplierService supplierService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _purchaseService = purchaseService;
         _supplierService = supplierService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Returns = new ReadOnlyObservableCollection<PurchaseReturnListDto>(_returns);
         Suppliers = new ReadOnlyObservableCollection<LookupDto>(_suppliers);
@@ -213,13 +218,25 @@ public class PurchaseReturnsViewModel : ViewModelBase
             });
 
         ConfirmCancelCommand = new AsyncRelayCommand(
-            execute: async (_, ct) => await CancelReturnAsync(ct),
+            execute: async (_, ct) => await ConfirmCancelReturnAsync(ct),
             canExecute: _ => IsCancelDrawerOpen && !IsCancelling && !string.IsNullOrWhiteSpace(CancelReason));
 
         CloseCancelCommand = new RelayCommand(
             execute: _ => IsCancelDrawerOpen = false);
 
         _connectionStore.ConnectionStateChanged += OnConnectionStateChanged;
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.PurchaseReturned or UiDataChangeType.PurchasePosted or UiDataChangeType.StockChanged or UiDataChangeType.SupplierChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
+
         _ = RefreshAllAsync(CancellationToken.None);
     }
 
@@ -630,6 +647,8 @@ public class PurchaseReturnsViewModel : ViewModelBase
         try
         {
             await _purchaseService.CreateAndPostPurchaseReturnAsync(dto, ct);
+            _eventBus?.Publish(UiDataChangeType.PurchaseReturned);
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
             IsCreateDrawerOpen = false;
             await LoadDataAsync(ct);
         }
@@ -671,7 +690,7 @@ public class PurchaseReturnsViewModel : ViewModelBase
         IsCancelDrawerOpen = true;
     }
 
-    public async Task CancelReturnAsync(CancellationToken ct)
+    public async Task ConfirmCancelReturnAsync(CancellationToken ct)
     {
         if (_returnToCancel == null) return;
 
@@ -687,6 +706,8 @@ public class PurchaseReturnsViewModel : ViewModelBase
         try
         {
             await _purchaseService.CancelPurchaseReturnAsync(_returnToCancel.Id, CancelReason, ct);
+            _eventBus?.Publish(UiDataChangeType.PurchaseReturned);
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
             IsCancelDrawerOpen = false;
             await LoadDataAsync(ct);
         }
@@ -700,11 +721,27 @@ public class PurchaseReturnsViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await RefreshAllAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await RefreshAllAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
         }
 
         base.Dispose(disposing);

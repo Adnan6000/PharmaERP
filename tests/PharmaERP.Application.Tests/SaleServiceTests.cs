@@ -149,7 +149,7 @@ public class SaleServiceTests
                 IsActive = true
             });
 
-        public Task<PagedResult<ProductDto>> GetPagedAsync(PaginationQuery query, string? searchTerm = null, CancellationToken cancellationToken = default) =>
+        public Task<PagedResult<ProductDto>> GetPagedAsync(PaginationQuery query, string? searchTerm = null, int? categoryId = null, int? manufacturerId = null, CancellationToken cancellationToken = default) =>
             Task.FromResult(new PagedResult<ProductDto>([], 0, 1, 20));
 
         public Task<Product> AddAsync(Product product, CancellationToken cancellationToken = default) => Task.FromResult(product);

@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SalesViewModel}">
 
@@ -72,6 +73,7 @@
                 <!-- Filter Controls -->
                 <WrapPanel Grid.Row="1" VerticalAlignment="Center">
                     <!-- Quick Date Presets -->
+                    <TextBlock Text="Date Range:" VerticalAlignment="Center" Margin="0,0,6,6" Foreground="{StaticResource Brush.TextMuted}" FontWeight="SemiBold" />
                     <StackPanel Orientation="Horizontal" Margin="0,0,16,6">
                         <Button Content="Today" Style="{StaticResource Button.Outline}" Command="{Binding FilterTodayCommand}" Padding="8,4" Margin="0,0,4,0" FontSize="11" />
                         <Button Content="Yesterday" Style="{StaticResource Button.Outline}" Command="{Binding FilterYesterdayCommand}" Padding="8,4" Margin="0,0,4,0" FontSize="11" />
@@ -80,12 +82,13 @@
                     </StackPanel>
 
                     <!-- Search Box -->
-                    <TextBox Width="220"
+                    <TextBlock Text="Search:" VerticalAlignment="Center" Margin="0,0,6,6" Foreground="{StaticResource Brush.TextMuted}" FontWeight="SemiBold" />
+                    <TextBox Width="230"
                              Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             common:PlaceholderHelper.Placeholder="Invoice #, Customer..."
                              Padding="8,5"
                              Margin="0,0,12,6"
-                             VerticalContentAlignment="Center"
-                             Tag="Search Invoice #, Customer..." />
+                             VerticalContentAlignment="Center" />
 
                     <Button Style="{StaticResource Button.Primary}"
                             Content="Search"
@@ -260,6 +263,8 @@
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
                             <Grid Grid.Row="0" Margin="0,0,0,4">
@@ -267,10 +272,18 @@
                                 <TextBlock Text="{Binding SelectedInvoiceDetails.GrossTotal, StringFormat='N2'}" HorizontalAlignment="Right" />
                             </Grid>
                             <Grid Grid.Row="1" Margin="0,0,0,4">
-                                <TextBlock Text="Discounts:" Foreground="{StaticResource Brush.TextMuted}" />
+                                <TextBlock Text="Line Discounts:" Foreground="{StaticResource Brush.TextMuted}" />
                                 <TextBlock Text="{Binding SelectedInvoiceDetails.LineDiscountTotal, StringFormat='-{0:N2}'}" HorizontalAlignment="Right" Foreground="Crimson" />
                             </Grid>
-                            <Grid Grid.Row="2">
+                            <Grid Grid.Row="2" Margin="0,0,0,4">
+                                <TextBlock Text="Invoice Discount:" Foreground="{StaticResource Brush.TextMuted}" />
+                                <TextBlock Text="{Binding SelectedInvoiceDetails.InvoiceDiscountAmount, StringFormat='-{0:N2}'}" HorizontalAlignment="Right" Foreground="Crimson" />
+                            </Grid>
+                            <Grid Grid.Row="3" Margin="0,0,0,4">
+                                <TextBlock Text="Tax Amount:" Foreground="{StaticResource Brush.TextMuted}" />
+                                <TextBlock Text="{Binding SelectedInvoiceDetails.TaxAmount, StringFormat='N2'}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <Grid Grid.Row="4" Margin="0,4,0,0">
                                 <TextBlock Text="Net Total:" FontWeight="Bold" FontSize="14" />
                                 <TextBlock Text="{Binding SelectedInvoiceDetails.NetTotal, Converter={StaticResource Money}}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Right" />
                             </Grid>

@@ -11,6 +11,7 @@ namespace PharmaERP.Desktop.Services;
 public class ConnectionStateStore : ViewModelBase
 {
     private readonly IDbConnectionTester _connectionTester;
+    private readonly IUiDataChangeBus? _eventBus;
 
     private bool _isConnected;
     private bool _isDatabaseInitialized;
@@ -22,9 +23,10 @@ public class ConnectionStateStore : ViewModelBase
     private bool _isChecking;
     private DateTime? _lastCheckedAt;
 
-    public ConnectionStateStore(IDbConnectionTester connectionTester)
+    public ConnectionStateStore(IDbConnectionTester connectionTester, IUiDataChangeBus? eventBus = null)
     {
         _connectionTester = connectionTester;
+        _eventBus = eventBus;
     }
 
     public event EventHandler? ConnectionStateChanged;
@@ -146,6 +148,8 @@ public class ConnectionStateStore : ViewModelBase
             {
                 IsChecking = false;
                 ConnectionStateChanged?.Invoke(this, EventArgs.Empty);
+                _eventBus?.Publish(UiDataChangeType.DatabaseConnectionChanged);
+                _eventBus?.Publish(UiDataChangeType.All);
             });
         }
     }

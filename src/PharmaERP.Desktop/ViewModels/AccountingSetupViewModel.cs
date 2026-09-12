@@ -7,7 +7,7 @@ using PharmaERP.Domain.Enums;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class AccountingSetupViewModel : ViewModelBase
+public class AccountingSetupViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IAccountingSetupService _setupService;
     private readonly IAccountingConfigService _configService;
@@ -205,5 +205,15 @@ public class AccountingSetupViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        await InitializeAsync(ct);
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        await InitializeAsync(ct);
     }
 }

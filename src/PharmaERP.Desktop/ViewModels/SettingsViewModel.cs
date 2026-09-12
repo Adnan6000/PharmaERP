@@ -407,8 +407,9 @@ public class SettingsViewModel : ViewModelBase
             }
 
             _databaseConfigStore.SaveConfig(config);
+            _ = _connectionStore.CheckConnectionAsync(CancellationToken.None);
 
-            SaveMessage = $"Active profile set to '{SelectedProfile}' in canonical settings. Please restart the application for this setting to take effect.";
+            SaveMessage = $"Active profile set to '{SelectedProfile}' in canonical settings.";
         }
         catch (Exception ex)
         {

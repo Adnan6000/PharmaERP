@@ -13,7 +13,7 @@ using PharmaERP.Domain.Enums;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class SalesEntryViewModel : ViewModelBase
+public class SalesEntryViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly ISaleService _saleService;
     private readonly IProductLookupService _lookupService;
@@ -22,11 +22,17 @@ public class SalesEntryViewModel : ViewModelBase
     private readonly InvoicePrintService _printService;
     private readonly WorkstationConfigService _configService;
     private readonly ILogger<SalesEntryViewModel> _logger;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _customersDirty = true;
 
     // Search and Input fields
     private string _searchTerm = string.Empty;
     private string _lookupStatusMessage = string.Empty;
     private bool _isLookupError = false;
+    private ObservableCollection<ProductLookupResultDto> _searchSuggestions = new();
+    private bool _isSuggestionPopupOpen = false;
+    private ProductLookupResultDto? _selectedSuggestion;
 
     // Customer & Header Details
     private ObservableCollection<CustomerDto> _customers = new();
@@ -57,7 +63,8 @@ public class SalesEntryViewModel : ViewModelBase
         IInvoicePrintDataProvider printDataProvider,
         InvoicePrintService printService,
         WorkstationConfigService configService,
-        ILogger<SalesEntryViewModel> logger)
+        ILogger<SalesEntryViewModel> logger,
+        IUiDataChangeBus? eventBus = null)
     {
         _saleService = saleService;
         _lookupService = lookupService;
@@ -66,6 +73,7 @@ public class SalesEntryViewModel : ViewModelBase
         _printService = printService;
         _configService = configService;
         _logger = logger;
+        _eventBus = eventBus;
 
         // Commands
         SearchOrScanCommand = new AsyncRelayCommand(SearchOrScanAsync);
@@ -79,6 +87,19 @@ public class SalesEntryViewModel : ViewModelBase
         RecallTicketCommand = new RelayCommand(_ => RecallParkedTicket(), _ => _parkedTickets.Count > 0);
         FocusSearchCommand = new RelayCommand(_ => RequestFocusSearch?.Invoke());
         EscapeCommand = new RelayCommand(_ => HandleEscape());
+        SelectSuggestionCommand = new RelayCommand(param => SelectSuggestion(param as ProductLookupResultDto ?? SelectedSuggestion));
+        CloseSuggestionsCommand = new RelayCommand(_ => { IsSuggestionPopupOpen = false; SearchSuggestions.Clear(); });
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.CustomerChanged or UiDataChangeType.MasterChanged or UiDataChangeType.All)
+                {
+                    _customersDirty = true;
+                }
+            });
+        }
 
         _ = LoadCustomersAsync();
     }
@@ -229,6 +250,24 @@ public class SalesEntryViewModel : ViewModelBase
 
     public int ParkedTicketCount => _parkedTickets.Count;
 
+    public ObservableCollection<ProductLookupResultDto> SearchSuggestions
+    {
+        get => _searchSuggestions;
+        set => SetProperty(ref _searchSuggestions, value);
+    }
+
+    public bool IsSuggestionPopupOpen
+    {
+        get => _isSuggestionPopupOpen;
+        set => SetProperty(ref _isSuggestionPopupOpen, value);
+    }
+
+    public ProductLookupResultDto? SelectedSuggestion
+    {
+        get => _selectedSuggestion;
+        set => SetProperty(ref _selectedSuggestion, value);
+    }
+
     #endregion
 
     #region Commands
@@ -244,6 +283,8 @@ public class SalesEntryViewModel : ViewModelBase
     public ICommand RecallTicketCommand { get; }
     public ICommand FocusSearchCommand { get; }
     public ICommand EscapeCommand { get; }
+    public ICommand SelectSuggestionCommand { get; }
+    public ICommand CloseSuggestionsCommand { get; }
 
     public event Action? RequestFocusSearch;
     public event Action<InvoicePrintDataDto>? RequestShowPrintPreview;
@@ -257,13 +298,84 @@ public class SalesEntryViewModel : ViewModelBase
         string term = SearchTerm.Trim();
         SearchTerm = string.Empty;
 
-        var result = await _lookupService.LookupByBarcodeOrCodeAsync(term);
-        LookupStatusMessage = result.Message;
-        IsLookupError = result.Status != ProductLookupStatus.Available;
-
-        if (result.Status == ProductLookupStatus.Available && result.Product != null)
+        // 1. First attempt exact barcode or code match
+        var exactResult = await _lookupService.LookupByBarcodeOrCodeAsync(term);
+        if (exactResult.Status == ProductLookupStatus.Available && exactResult.Product != null)
         {
-            AddOrIncrementProduct(result);
+            IsSuggestionPopupOpen = false;
+            SearchSuggestions.Clear();
+            LookupStatusMessage = exactResult.Message;
+            IsLookupError = false;
+            AddOrIncrementProduct(exactResult);
+            RequestFocusSearch?.Invoke();
+            return;
+        }
+        else if (exactResult.Status != ProductLookupStatus.NotFound && exactResult.Product != null)
+        {
+            // Exact code/barcode matched, but product is inactive or out of stock
+            IsSuggestionPopupOpen = false;
+            SearchSuggestions.Clear();
+            LookupStatusMessage = exactResult.Message;
+            IsLookupError = true;
+            RequestFocusSearch?.Invoke();
+            return;
+        }
+
+        // 2. Exact code/barcode not found: search by product name / generic name
+        var searchResults = await _lookupService.SearchProductsAsync(term, maxResults: 15);
+        if (searchResults.Count == 0)
+        {
+            IsSuggestionPopupOpen = false;
+            SearchSuggestions.Clear();
+            LookupStatusMessage = $"No products matching '{term}' were found.";
+            IsLookupError = true;
+        }
+        else if (searchResults.Count == 1)
+        {
+            var single = searchResults[0];
+            IsSuggestionPopupOpen = false;
+            SearchSuggestions.Clear();
+            if (single.Status == ProductLookupStatus.Available && single.Product != null)
+            {
+                AddOrIncrementProduct(single);
+                LookupStatusMessage = single.Message;
+                IsLookupError = false;
+            }
+            else
+            {
+                LookupStatusMessage = single.Message;
+                IsLookupError = true;
+            }
+        }
+        else
+        {
+            // Multiple matches found: display popup suggestions for cashier disambiguation
+            SearchSuggestions = new ObservableCollection<ProductLookupResultDto>(searchResults);
+            IsSuggestionPopupOpen = true;
+            LookupStatusMessage = $"Found {searchResults.Count} matches for '{term}'. Select a product from the list.";
+            IsLookupError = false;
+        }
+
+        RequestFocusSearch?.Invoke();
+    }
+
+    public void SelectSuggestion(ProductLookupResultDto? suggestion)
+    {
+        if (suggestion == null) return;
+
+        IsSuggestionPopupOpen = false;
+        SearchSuggestions.Clear();
+
+        if (suggestion.Status == ProductLookupStatus.Available && suggestion.Product != null)
+        {
+            AddOrIncrementProduct(suggestion);
+            LookupStatusMessage = suggestion.Message;
+            IsLookupError = false;
+        }
+        else
+        {
+            LookupStatusMessage = suggestion.Message;
+            IsLookupError = true;
         }
 
         RequestFocusSearch?.Invoke();
@@ -360,12 +472,22 @@ public class SalesEntryViewModel : ViewModelBase
         LookupStatusMessage = string.Empty;
         IsLookupError = false;
         IsTenderModalOpen = false;
+        IsSuggestionPopupOpen = false;
+        SearchSuggestions.Clear();
         RecalculateTotals();
         RequestFocusSearch?.Invoke();
     }
 
     private void HandleEscape()
     {
+        if (IsSuggestionPopupOpen)
+        {
+            IsSuggestionPopupOpen = false;
+            SearchSuggestions.Clear();
+            RequestFocusSearch?.Invoke();
+            return;
+        }
+
         if (IsTenderModalOpen)
         {
             IsTenderModalOpen = false;
@@ -450,6 +572,8 @@ public class SalesEntryViewModel : ViewModelBase
             var invoice = await _saleService.PostSaleAsync(createDto);
             LookupStatusMessage = $"Sale posted successfully! Invoice #{invoice.InvoiceNumber}";
             IsLookupError = false;
+            _eventBus?.Publish(UiDataChangeType.SalePosted);
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
 
             // Printing handling
             if (PrintReceiptOnSave)
@@ -524,7 +648,7 @@ public class SalesEntryViewModel : ViewModelBase
         RequestFocusSearch?.Invoke();
     }
 
-    private async Task LoadCustomersAsync()
+    public async Task LoadCustomersAsync()
     {
         try
         {
@@ -535,6 +659,31 @@ public class SalesEntryViewModel : ViewModelBase
         {
             _logger.LogWarning(ex, "Failed to load customers.");
         }
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_customersDirty)
+        {
+            _customersDirty = false;
+            await LoadCustomersAsync();
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _customersDirty = false;
+        await LoadCustomersAsync();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     private class ParkedTicket

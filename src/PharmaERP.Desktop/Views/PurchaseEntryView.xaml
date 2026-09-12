@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:PurchaseEntryViewModel}">
 
@@ -75,6 +76,8 @@
                         <ComboBox ItemsSource="{Binding Suppliers}"
                                   SelectedItem="{Binding SelectedSupplier}"
                                   DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select Supplier..."
                                   Height="32"
                                   MaxDropDownHeight="220"
                                   VerticalContentAlignment="Center" />
@@ -83,6 +86,7 @@
                     <StackPanel Grid.Column="1" Margin="0,0,10,0">
                         <TextBlock Text="Supplier Bill / Inv #" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding SupplierInvoiceNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. INV-10042"
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>
@@ -104,6 +108,7 @@
                     <StackPanel Grid.Column="4">
                         <TextBlock Text="Remarks" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding Remarks, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Optional invoice remarks..."
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>
@@ -145,6 +150,8 @@
                         <ComboBox ItemsSource="{Binding Products}"
                                   SelectedItem="{Binding SelectedProductForLine}"
                                   DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select Product..."
                                   Height="32"
                                   MaxDropDownHeight="220"
                                   VerticalContentAlignment="Center" />
@@ -153,6 +160,7 @@
                     <StackPanel Grid.Column="1" Margin="0,0,10,0">
                         <TextBlock Text="Batch #" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding LineBatchNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. BATCH-01"
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>
@@ -192,6 +200,7 @@
                     <StackPanel Grid.Column="0" Margin="0,0,10,0">
                         <TextBlock Text="Quantity *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding LineQuantity, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 common:PlaceholderHelper.Placeholder="1.00"
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>
@@ -199,6 +208,7 @@
                     <StackPanel Grid.Column="1" Margin="0,0,10,0">
                         <TextBlock Text="Purchase Rate *" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding LinePurchaseRate, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>
@@ -206,6 +216,7 @@
                     <StackPanel Grid.Column="2" Margin="0,0,10,0">
                         <TextBlock Text="Sale Rate" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding LineSuggestedSaleRate, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>
@@ -213,6 +224,7 @@
                     <StackPanel Grid.Column="3" Margin="0,0,10,0">
                         <TextBlock Text="Discount" FontWeight="SemiBold" FontSize="11" Margin="0,0,0,3" />
                         <TextBox Text="{Binding LineDiscountAmount, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
                                  Height="32"
                                  VerticalContentAlignment="Center" />
                     </StackPanel>

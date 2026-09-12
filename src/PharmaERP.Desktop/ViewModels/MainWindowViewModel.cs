@@ -133,9 +133,14 @@ public class MainWindowViewModel : ViewModelBase
 
     public void NavigateToSection(string section)
     {
+        _ = NavigateToSectionAsync(section);
+    }
+
+    public async Task NavigateToSectionAsync(string section)
+    {
         SelectedNavSection = section;
 
-        CurrentViewModel = section switch
+        object targetVm = section switch
         {
             "Dashboard" => _dashboardVm,
             "SalesEntry" => _salesEntryVm,
@@ -153,49 +158,29 @@ public class MainWindowViewModel : ViewModelBase
             "Categories" => _categoriesVm,
             "Units" => _unitsVm,
             "Settings" => _settingsVm,
-            "ChartOfAccounts" => SwitchToChartOfAccounts(),
-            "Vouchers" => SwitchToVouchers(),
-            "Ledgers" => SwitchToLedgers(),
-            "AccountingSetup" => SwitchToAccountingSetup(),
+            "ChartOfAccounts" => _chartOfAccountsVm,
+            "Vouchers" => _vouchersVm,
+            "Ledgers" => _ledgersVm,
+            "AccountingSetup" => _accountingSetupVm,
             _ => _dashboardVm
         };
-    }
 
-    private object SwitchToChartOfAccounts()
-    {
-        _ = _chartOfAccountsVm.LoadAccountsAsync();
-        return _chartOfAccountsVm;
-    }
+        CurrentViewModel = targetVm;
 
-    private object SwitchToVouchers()
-    {
-        _ = _vouchersVm.InitializeAsync();
-        return _vouchersVm;
-    }
-
-    private object SwitchToLedgers()
-    {
-        _ = _ledgersVm.InitializeAsync();
-        return _ledgersVm;
-    }
-
-    private object SwitchToAccountingSetup()
-    {
-        _ = _accountingSetupVm.InitializeAsync();
-        return _accountingSetupVm;
+        if (targetVm is IAsyncNavigable navigable)
+        {
+            await navigable.OnNavigatedToAsync(CancellationToken.None);
+        }
     }
 
     private void HandleRefresh()
     {
-        if (CurrentViewModel is DashboardViewModel d && d.RefreshCommand.CanExecute(null)) d.RefreshCommand.Execute(null);
-        else if (CurrentViewModel is SalesViewModel s && s.SearchCommand.CanExecute(null)) s.SearchCommand.Execute(null);
-        else if (CurrentViewModel is SalesReturnsViewModel sr && sr.RefreshHistoryCommand.CanExecute(null)) sr.RefreshHistoryCommand.Execute(null);
-        else if (CurrentViewModel is ProductsViewModel p && p.RefreshCommand.CanExecute(null)) p.RefreshCommand.Execute(null);
+        if (CurrentViewModel is IRefreshableViewModel refreshable)
+        {
+            _ = refreshable.RefreshAsync(CancellationToken.None);
+        }
         else if (CurrentViewModel is CustomersViewModel cu && cu.RefreshCommand.CanExecute(null)) cu.RefreshCommand.Execute(null);
         else if (CurrentViewModel is SuppliersViewModel su && su.RefreshCommand.CanExecute(null)) su.RefreshCommand.Execute(null);
-        else if (CurrentViewModel is PurchasesViewModel pu && pu.RefreshCommand.CanExecute(null)) pu.RefreshCommand.Execute(null);
-        else if (CurrentViewModel is PurchaseReturnsViewModel pr && pr.RefreshCommand.CanExecute(null)) pr.RefreshCommand.Execute(null);
-        else if (CurrentViewModel is InventoryStockViewModel inv && inv.RefreshCommand.CanExecute(null)) inv.RefreshCommand.Execute(null);
         else if (CurrentViewModel is ManufacturersViewModel m && m.RefreshCommand.CanExecute(null)) m.RefreshCommand.Execute(null);
         else if (CurrentViewModel is CategoriesViewModel c && c.RefreshCommand.CanExecute(null)) c.RefreshCommand.Execute(null);
         else if (CurrentViewModel is UnitsViewModel u && u.RefreshCommand.CanExecute(null)) u.RefreshCommand.Execute(null);
@@ -254,5 +239,41 @@ public class MainWindowViewModel : ViewModelBase
         else if (CurrentViewModel is UnitsViewModel { IsDrawerOpen: true } u && u.SaveCommand.CanExecute(null))
             u.SaveCommand.Execute(null);
     }
+
+    /// <summary>
+    /// Explicitly disposes all owned ViewModel children.
+    /// Mechanism: MainWindowViewModel holds the only strong references to the 19 transient ViewModels.
+    /// Microsoft DI root scope does NOT auto-dispose transient IDisposables, so this Dispose override
+    /// provides the guaranteed disposal chain. MainWindow.xaml.cs wires Closed → this Dispose.
+    /// Each child VM's Dispose calls _busSubscription?.Dispose(), unregistering from IUiDataChangeBus.
+    /// </summary>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _dashboardVm.Dispose();
+            _salesEntryVm.Dispose();
+            _salesVm.Dispose();
+            _salesReturnsVm.Dispose();
+            _productsVm.Dispose();
+            _customersVm.Dispose();
+            _suppliersVm.Dispose();
+            _manufacturersVm.Dispose();
+            _categoriesVm.Dispose();
+            _unitsVm.Dispose();
+            _purchaseEntryVm.Dispose();
+            _purchasesVm.Dispose();
+            _purchaseReturnsVm.Dispose();
+            _inventoryStockVm.Dispose();
+            _openingStockVm.Dispose();
+            _settingsVm.Dispose();
+            _chartOfAccountsVm.Dispose();
+            _vouchersVm.Dispose();
+            _ledgersVm.Dispose();
+            _accountingSetupVm.Dispose();
+        }
+        base.Dispose(disposing);
+    }
 }
+
 

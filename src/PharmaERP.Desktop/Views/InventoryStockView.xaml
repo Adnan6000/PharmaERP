@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:InventoryStockViewModel}">
 
@@ -80,6 +81,7 @@
                             </Grid.ColumnDefinitions>
                             <Grid Grid.Column="0">
                                 <TextBox Text="{Binding CurrentStockSearch, UpdateSourceTrigger=PropertyChanged}"
+                                         common:PlaceholderHelper.Placeholder="Search product by name, code..."
                                          Padding="28,6,8,6"
                                          VerticalContentAlignment="Center" />
                                 <TextBlock Text="🔍"
@@ -138,6 +140,7 @@
                             </Grid.ColumnDefinitions>
                             <Grid Grid.Column="0">
                                 <TextBox Text="{Binding BatchStockSearch, UpdateSourceTrigger=PropertyChanged}"
+                                         common:PlaceholderHelper.Placeholder="Search batch number, product name..."
                                          Padding="28,6,8,6"
                                          VerticalContentAlignment="Center" />
                                 <TextBlock Text="🔍"
@@ -230,6 +233,7 @@
                             <ComboBox SelectedValue="{Binding SelectedExpiryFilter}"
                                       SelectedValuePath="Tag"
                                       Width="160"
+                                      common:ClearableHelper.IsClearable="True"
                                       Margin="0,0,20,0"
                                       VerticalContentAlignment="Center">
                                 <ComboBoxItem Content="All Stock Batches" Tag="All" IsSelected="True" />

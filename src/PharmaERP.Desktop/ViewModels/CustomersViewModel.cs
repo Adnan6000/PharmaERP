@@ -9,10 +9,13 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class CustomersViewModel : ViewModelBase
+public class CustomersViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly ICustomerService _customerService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<CustomerDto> _items = [];
     private CustomerDto? _selectedItem;
@@ -49,16 +52,29 @@ public class CustomersViewModel : ViewModelBase
 
     public CustomersViewModel(
         ICustomerService customerService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _customerService = customerService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Items = new ReadOnlyObservableCollection<CustomerDto>(_items);
 
         RefreshCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await LoadDataAsync(ct),
             canExecute: _ => !IsLoading && !IsSaving);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.CustomerChanged or UiDataChangeType.SalePosted or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         FirstPageCommand = new AsyncRelayCommand(
             execute: async (_, ct) => { PageNumber = 1; await LoadDataAsync(ct); },
@@ -427,6 +443,7 @@ public class CustomersViewModel : ViewModelBase
             }
 
             CloseDrawer();
+            _eventBus?.Publish(UiDataChangeType.CustomerChanged);
             await LoadDataAsync(ct);
         }
         catch (DuplicateKeyException ex)
@@ -452,6 +469,7 @@ public class CustomersViewModel : ViewModelBase
         try
         {
             await _customerService.ToggleActiveAsync(customer.Id, customer.RowVersion, ct);
+            _eventBus?.Publish(UiDataChangeType.CustomerChanged);
             await LoadDataAsync(ct);
         }
         catch (Exception ex)
@@ -460,11 +478,27 @@ public class CustomersViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadDataAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadDataAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

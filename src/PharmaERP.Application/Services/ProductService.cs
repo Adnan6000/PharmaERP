@@ -32,11 +32,13 @@ public class ProductService : IProductService
     public async Task<PagedResult<ProductDto>> GetProductsPagedAsync(
         PaginationQuery query,
         string? searchTerm = null,
+        int? categoryId = null,
+        int? manufacturerId = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        return await _productRepository.GetPagedAsync(query, searchTerm, cancellationToken);
+        return await _productRepository.GetPagedAsync(query, searchTerm, categoryId, manufacturerId, cancellationToken);
     }
 
     public async Task<ProductDto?> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)

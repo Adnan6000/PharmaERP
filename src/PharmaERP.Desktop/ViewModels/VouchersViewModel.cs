@@ -9,7 +9,7 @@ using PharmaERP.Domain.Enums;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class VouchersViewModel : ViewModelBase
+public class VouchersViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IVoucherService _voucherService;
     private readonly IPaymentSettlementService _settlementService;
@@ -17,6 +17,9 @@ public class VouchersViewModel : ViewModelBase
     private readonly ICustomerService _customerService;
     private readonly ISupplierService _supplierService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     // List & Filter
     private string _activeTab = "Receipt"; // Receipt, Payment, Contra, Journal, OpeningBalance
@@ -110,7 +113,8 @@ public class VouchersViewModel : ViewModelBase
         IAccountService accountService,
         ICustomerService customerService,
         ISupplierService supplierService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _voucherService = voucherService;
         _settlementService = settlementService;
@@ -118,6 +122,7 @@ public class VouchersViewModel : ViewModelBase
         _customerService = customerService;
         _supplierService = supplierService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         ReceiptVouchers = new ReadOnlyObservableCollection<ReceiptVoucherDto>(_receiptVouchers);
         PaymentVouchers = new ReadOnlyObservableCollection<PaymentVoucherDto>(_paymentVouchers);
@@ -141,6 +146,17 @@ public class VouchersViewModel : ViewModelBase
         RefreshCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await LoadActiveTabDataAsync(ct),
             canExecute: _ => !IsLoading && !IsSaving);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.VoucherPosted or UiDataChangeType.SalePosted or UiDataChangeType.PurchasePosted or UiDataChangeType.AccountChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         SwitchTabCommand = new AsyncRelayCommand(
             execute: async (param, ct) =>
@@ -571,6 +587,7 @@ public class VouchersViewModel : ViewModelBase
             var created = await _voucherService.CreateReceiptVoucherAsync(dto, ct);
             _receiptVouchers.Insert(0, created);
             SelectedReceiptVoucher = created;
+            _eventBus?.Publish(UiDataChangeType.VoucherPosted);
             CloseAllDrawers();
         }
         catch (Exception ex)
@@ -606,6 +623,7 @@ public class VouchersViewModel : ViewModelBase
             var created = await _voucherService.CreatePaymentVoucherAsync(dto, ct);
             _paymentVouchers.Insert(0, created);
             SelectedPaymentVoucher = created;
+            _eventBus?.Publish(UiDataChangeType.VoucherPosted);
             CloseAllDrawers();
         }
         catch (Exception ex)
@@ -639,6 +657,7 @@ public class VouchersViewModel : ViewModelBase
             var created = await _voucherService.CreateContraVoucherAsync(dto, ct);
             _contraVouchers.Insert(0, created);
             SelectedContraVoucher = created;
+            _eventBus?.Publish(UiDataChangeType.VoucherPosted);
             CloseAllDrawers();
         }
         catch (Exception ex)
@@ -664,8 +683,6 @@ public class VouchersViewModel : ViewModelBase
                 AccountId = l.AccountId,
                 DebitAmount = l.Debit,
                 CreditAmount = l.Credit,
-                CustomerId = l.CustomerId,
-                SupplierId = l.SupplierId,
                 Narration = l.Description
             }).ToList();
 
@@ -680,6 +697,7 @@ public class VouchersViewModel : ViewModelBase
             var created = await _voucherService.CreateJournalVoucherAsync(dto, ct);
             _journalVouchers.Insert(0, created);
             SelectedJournalVoucher = created;
+            _eventBus?.Publish(UiDataChangeType.VoucherPosted);
             CloseAllDrawers();
         }
         catch (Exception ex)
@@ -721,6 +739,7 @@ public class VouchersViewModel : ViewModelBase
             var created = await _voucherService.CreateOpeningBalanceVoucherAsync(dto, ct);
             _openingBalanceVouchers.Insert(0, created);
             SelectedOpeningBalanceVoucher = created;
+            _eventBus?.Publish(UiDataChangeType.VoucherPosted);
             CloseAllDrawers();
         }
         catch (Exception ex)
@@ -778,6 +797,7 @@ public class VouchersViewModel : ViewModelBase
                     break;
             }
 
+            _eventBus?.Publish(UiDataChangeType.VoucherVoided);
             CloseAllDrawers();
         }
         catch (Exception ex)
@@ -976,6 +996,31 @@ public class VouchersViewModel : ViewModelBase
         {
             IsSaving = false;
         }
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await InitializeAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await InitializeAsync(ct);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }
 

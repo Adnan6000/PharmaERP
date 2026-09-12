@@ -25,7 +25,8 @@ public class PaymentVoucherAllocationConfiguration : BaseEntityConfiguration<Pay
         builder.Property(a => a.Status)
             .HasConversion<int>()
             .IsRequired()
-            .HasDefaultValue(PharmaERP.Domain.Enums.AllocationStatus.Active);
+            .HasDefaultValue(PharmaERP.Domain.Enums.AllocationStatus.Active)
+            .HasSentinel((PharmaERP.Domain.Enums.AllocationStatus)0);
 
         builder.Property(a => a.VoidReason)
             .HasMaxLength(500);

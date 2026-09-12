@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SalesEntryViewModel}">
 
@@ -122,6 +123,8 @@
                                   ItemsSource="{Binding Customers}"
                                   SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}"
                                   DisplayMemberPath="Name"
+                                  common:PlaceholderHelper.Placeholder="Select Customer (Opt)..."
+                                  VerticalContentAlignment="Center"
                                   VerticalAlignment="Center" />
                     </StackPanel>
 
@@ -146,6 +149,8 @@
                                           ItemsSource="{Binding Customers}"
                                           SelectedItem="{Binding SelectedCustomer, Mode=TwoWay}"
                                           DisplayMemberPath="Name"
+                                          common:PlaceholderHelper.Placeholder="Select Customer (Req)..."
+                                          VerticalContentAlignment="Center"
                                           VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
@@ -159,6 +164,7 @@
                                    Margin="0,0,6,0" />
                         <TextBox Width="140"
                                  Text="{Binding Reference, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. Dr. Ali / Ref#12"
                                  VerticalAlignment="Center"
                                  Padding="6,4" />
                     </StackPanel>
@@ -174,12 +180,123 @@
                     <TextBox x:Name="SearchBox"
                              Grid.Column="0"
                              Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             FontSize="16"
+                             FontSize="15"
                              FontWeight="SemiBold"
                              Padding="10,8"
                              VerticalContentAlignment="Center"
                              KeyDown="SearchBox_KeyDown"
-                             Tag="Scan Barcode or Type Product Code / Name (Press Enter) — [Ctrl+F]" />
+                             common:PlaceholderHelper.Placeholder="Scan Barcode or Type Product Code / Name (Press Enter)..." />
+
+                    <!-- Search Suggestions Popup for Multiple Disambiguation Matches -->
+                    <Popup x:Name="SuggestionsPopup"
+                           IsOpen="{Binding IsSuggestionPopupOpen, Mode=TwoWay}"
+                           PlacementTarget="{Binding ElementName=SearchBox}"
+                           Placement="Bottom"
+                           StaysOpen="False"
+                           AllowsTransparency="True"
+                           Focusable="False"
+                           PopupAnimation="Fade">
+                        <Border Background="{StaticResource Brush.Surface}"
+                                BorderBrush="{StaticResource Brush.Border}"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Width="{Binding ActualWidth, ElementName=SearchBox}"
+                                MaxHeight="280"
+                                Padding="4"
+                                SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.2" Direction="270" />
+                            </Border.Effect>
+                            <DockPanel>
+                                <Border DockPanel.Dock="Top" Background="{StaticResource Brush.Surface.Muted}" Padding="8,4" Margin="0,0,0,4" CornerRadius="4">
+                                    <Grid>
+                                        <TextBlock Text="Select product to add to bill:" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.Text.Secondary}" />
+                                        <TextBlock Text="[Esc to close]" FontSize="10" Foreground="{StaticResource Brush.Text.Muted}" HorizontalAlignment="Right" />
+                                    </Grid>
+                                </Border>
+                                <ListBox ItemsSource="{Binding SearchSuggestions}"
+                                         SelectedItem="{Binding SelectedSuggestion, Mode=TwoWay}"
+                                         BorderThickness="0"
+                                         Background="Transparent"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem">
+                                            <Setter Property="Padding" Value="8,6" />
+                                            <Setter Property="Cursor" Value="Hand" />
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="ListBoxItem">
+                                                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter />
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush.Surface.Muted}" />
+                                                            </Trigger>
+                                                            <Trigger Property="IsSelected" Value="True">
+                                                                <Setter TargetName="Bd" Property="Background" Value="#E0E7FF" />
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Style="{StaticResource Button.Subtle}"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Padding="0"
+                                                    Command="{Binding DataContext.SelectSuggestionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}">
+                                                <Grid Margin="4,2">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Product.Name}" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Brush.Text.Primary}" />
+                                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                                            <TextBlock Text="{Binding Product.ProductCode}" FontSize="11" Foreground="{StaticResource Brush.Text.Muted}" Margin="0,0,8,0" />
+                                                            <TextBlock Text="{Binding Product.CategoryName}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" Margin="0,0,8,0" />
+                                                            <TextBlock Text="{Binding Product.ManufacturerName}" FontSize="11" Foreground="{StaticResource Brush.Text.Secondary}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding TotalSaleableQuantity, StringFormat='Stock: {0:0.##}'}"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold"
+                                                                   HorizontalAlignment="Right">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Status.Success}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Status}" Value="OutOfStock">
+                                                                            <Setter Property="Foreground" Value="Crimson" />
+                                                                            <Setter Property="Text" Value="Out of Stock" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                    <TextBlock Grid.Column="2"
+                                                               Text="{Binding DefaultSalePrice, StringFormat='{}{0:N2}'}"
+                                                               FontSize="13"
+                                                               FontWeight="Bold"
+                                                               Foreground="{StaticResource Brush.Primary}"
+                                                               VerticalAlignment="Center"
+                                                               MinWidth="60"
+                                                               TextAlignment="Right" />
+                                                </Grid>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
+                        </Border>
+                    </Popup>
 
                     <Button Grid.Column="1"
                             Style="{StaticResource Button.Primary}"

@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:LedgersViewModel}">
 
@@ -152,7 +153,10 @@
                             </Style>
                         </StackPanel.Style>
                         <TextBlock Text="Account:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <ComboBox ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}" DisplayMemberPath="Name" Width="240" Margin="0,0,14,0" />
+                        <ComboBox ItemsSource="{Binding Accounts}" SelectedItem="{Binding SelectedAccount}" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select ledger account..."
+                                  Width="240" Margin="0,0,14,0" />
                     </StackPanel>
 
                     <!-- Cash Account Picker for Cash Book -->
@@ -168,7 +172,10 @@
                             </Style>
                         </StackPanel.Style>
                         <TextBlock Text="Cash Account:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <ComboBox ItemsSource="{Binding CashAccounts}" SelectedItem="{Binding SelectedCashAccount}" DisplayMemberPath="Name" Width="240" Margin="0,0,14,0" />
+                        <ComboBox ItemsSource="{Binding CashAccounts}" SelectedItem="{Binding SelectedCashAccount}" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select cash account..."
+                                  Width="240" Margin="0,0,14,0" />
                     </StackPanel>
 
                     <!-- Bank Account Picker for Bank Book -->
@@ -184,7 +191,10 @@
                             </Style>
                         </StackPanel.Style>
                         <TextBlock Text="Bank Account:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <ComboBox ItemsSource="{Binding BankAccounts}" SelectedItem="{Binding SelectedBankAccount}" DisplayMemberPath="Name" Width="240" Margin="0,0,14,0" />
+                        <ComboBox ItemsSource="{Binding BankAccounts}" SelectedItem="{Binding SelectedBankAccount}" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select bank account..."
+                                  Width="240" Margin="0,0,14,0" />
                     </StackPanel>
 
                     <!-- Customer Picker for Customer Ledger -->
@@ -200,7 +210,10 @@
                             </Style>
                         </StackPanel.Style>
                         <TextBlock Text="Customer:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Name" Width="220" Margin="0,0,14,0" />
+                        <ComboBox ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select customer..."
+                                  Width="220" Margin="0,0,14,0" />
                     </StackPanel>
 
                     <!-- Supplier Picker for Supplier Ledger -->
@@ -216,7 +229,10 @@
                             </Style>
                         </StackPanel.Style>
                         <TextBlock Text="Supplier:" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                        <ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" DisplayMemberPath="Name" Width="220" Margin="0,0,14,0" />
+                        <ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select supplier..."
+                                  Width="220" Margin="0,0,14,0" />
                     </StackPanel>
 
                     <!-- Day Book Date Picker -->

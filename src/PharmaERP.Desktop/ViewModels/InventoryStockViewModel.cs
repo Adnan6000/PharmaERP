@@ -8,10 +8,13 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class InventoryStockViewModel : ViewModelBase
+public class InventoryStockViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IInventoryService _inventoryService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     // Tabs: 0 = Current Stock, 1 = Batch Stock, 2 = Expiry Monitoring, 3 = Stock Movement Ledger
     private int _selectedTabIndex = 0;
@@ -63,10 +66,12 @@ public class InventoryStockViewModel : ViewModelBase
 
     public InventoryStockViewModel(
         IInventoryService inventoryService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _inventoryService = inventoryService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         CurrentStockItems = new ReadOnlyObservableCollection<CurrentStockDto>(_currentStockItems);
         BatchStockItems = new ReadOnlyObservableCollection<BatchStockDto>(_batchStockItems);
@@ -104,6 +109,18 @@ public class InventoryStockViewModel : ViewModelBase
             canExecute: _ => HasCurrentTabNext() && !IsLoading);
 
         _connectionStore.ConnectionStateChanged += OnConnectionStateChanged;
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.StockChanged or UiDataChangeType.SalePosted or UiDataChangeType.SaleReturned or UiDataChangeType.PurchasePosted or UiDataChangeType.PurchaseReturned or UiDataChangeType.ProductChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
+
         _ = LoadCurrentTabAsync(CancellationToken.None);
     }
 
@@ -475,11 +492,27 @@ public class InventoryStockViewModel : ViewModelBase
         _ => false
     };
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadCurrentTabAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadCurrentTabAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

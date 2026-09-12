@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:ProductsViewModel}">
 
@@ -93,6 +94,7 @@
                     <!-- Search Input -->
                     <Grid Grid.Column="0" Margin="0,0,10,0">
                         <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Search by name, code, barcode..."
                                  Padding="28,6,8,6"
                                  VerticalContentAlignment="Center" />
                         <TextBlock Text="🔍"
@@ -108,6 +110,8 @@
                               SelectedValue="{Binding SelectedCategoryFilter}"
                               SelectedValuePath="Id"
                               DisplayMemberPath="Name"
+                              common:ClearableHelper.IsClearable="True"
+                              common:PlaceholderHelper.Placeholder="All Categories"
                               Margin="0,0,10,0"
                               VerticalContentAlignment="Center" />
 
@@ -117,6 +121,8 @@
                               SelectedValue="{Binding SelectedManufacturerFilter}"
                               SelectedValuePath="Id"
                               DisplayMemberPath="Name"
+                              common:ClearableHelper.IsClearable="True"
+                              common:PlaceholderHelper.Placeholder="All Manufacturers"
                               Margin="0,0,10,0"
                               VerticalContentAlignment="Center" />
 
@@ -170,7 +176,7 @@
 
                             <!-- Unit -->
                             <DataGridTextColumn Header="Unit"
-                                                Binding="{Binding UnitName}"
+                                                Binding="{Binding UnitAbbreviation}"
                                                 Width="80" />
 
                             <!-- Purchase Price -->
@@ -182,11 +188,6 @@
                             <DataGridTextColumn Header="Sale Price"
                                                 Binding="{Binding DefaultSalePrice, StringFormat='{}{0:N2}'}"
                                                 Width="110" />
-
-                            <!-- Reorder Level -->
-                            <DataGridTextColumn Header="Reorder Lvl"
-                                                Binding="{Binding ReorderLevel}"
-                                                Width="90" />
 
                             <!-- Status -->
                             <DataGridTemplateColumn Header="Status" Width="90">
@@ -355,7 +356,9 @@
 
                             <!-- Name Field -->
                             <TextBlock Text="Product Name *" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. Panadol 500mg Tablet"
+                                     Margin="0,0,0,14" />
 
                             <!-- Code and Barcode in 2 columns -->
                             <Grid Margin="0,0,0,14">
@@ -367,41 +370,139 @@
 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Product Code" Style="{StaticResource Form.Label}" />
-                                    <TextBox Text="{Binding FormProductCode, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding FormProductCode, UpdateSourceTrigger=PropertyChanged}"
+                                             common:PlaceholderHelper.Placeholder="e.g. MED-00123" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Barcode" Style="{StaticResource Form.Label}" />
-                                    <TextBox Text="{Binding FormBarcode, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBox Text="{Binding FormBarcode, UpdateSourceTrigger=PropertyChanged}"
+                                             common:PlaceholderHelper.Placeholder="Scan or type barcode..." />
                                 </StackPanel>
                             </Grid>
 
                             <!-- Category -->
-                            <TextBlock Text="Category" Style="{StaticResource Form.Label}" />
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Category" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0" />
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource Button.Subtle}"
+                                        Content="+ Add New"
+                                        FontSize="11"
+                                        Padding="6,2"
+                                        Command="{Binding OpenQuickAddCategoryCommand}" />
+                            </Grid>
                             <ComboBox ItemsSource="{Binding Categories}"
                                       SelectedValue="{Binding FormCategoryId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
-                                      Margin="0,0,0,14" />
+                                      common:ClearableHelper.IsClearable="True"
+                                      common:PlaceholderHelper.Placeholder="Select Category..."
+                                      Margin="0,0,0,14"
+                                      Visibility="{Binding HasCategories, Converter={StaticResource BoolToVis}}" />
+                            <Border Background="{StaticResource Brush.Surface.Muted}"
+                                    BorderBrush="{StaticResource Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="10,8"
+                                    Margin="0,0,0,14"
+                                    Visibility="{Binding HasCategories, Converter={StaticResource InverseBoolToVis}}">
+                                <Grid>
+                                    <TextBlock Text="No categories exist yet." FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" VerticalAlignment="Center" />
+                                    <Button Style="{StaticResource Button.Outline}"
+                                            Content="+ Create Category"
+                                            FontSize="11"
+                                            Padding="8,3"
+                                            HorizontalAlignment="Right"
+                                            Command="{Binding OpenQuickAddCategoryCommand}" />
+                                </Grid>
+                            </Border>
 
                             <!-- Manufacturer -->
-                            <TextBlock Text="Manufacturer" Style="{StaticResource Form.Label}" />
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Manufacturer / Company" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0" />
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource Button.Subtle}"
+                                        Content="+ Add New"
+                                        FontSize="11"
+                                        Padding="6,2"
+                                        Command="{Binding OpenQuickAddManufacturerCommand}" />
+                            </Grid>
                             <ComboBox ItemsSource="{Binding Manufacturers}"
                                       SelectedValue="{Binding FormManufacturerId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
-                                      Margin="0,0,0,14" />
+                                      common:ClearableHelper.IsClearable="True"
+                                      common:PlaceholderHelper.Placeholder="Select Manufacturer..."
+                                      Margin="0,0,0,14"
+                                      Visibility="{Binding HasManufacturers, Converter={StaticResource BoolToVis}}" />
+                            <Border Background="{StaticResource Brush.Surface.Muted}"
+                                    BorderBrush="{StaticResource Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="10,8"
+                                    Margin="0,0,0,14"
+                                    Visibility="{Binding HasManufacturers, Converter={StaticResource InverseBoolToVis}}">
+                                <Grid>
+                                    <TextBlock Text="No manufacturers exist yet." FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" VerticalAlignment="Center" />
+                                    <Button Style="{StaticResource Button.Outline}"
+                                            Content="+ Create Manufacturer"
+                                            FontSize="11"
+                                            Padding="8,3"
+                                            HorizontalAlignment="Right"
+                                            Command="{Binding OpenQuickAddManufacturerCommand}" />
+                                </Grid>
+                            </Border>
 
                             <!-- Unit of Measure -->
-                            <TextBlock Text="Unit of Measure" Style="{StaticResource Form.Label}" />
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Unit of Measure" Style="{StaticResource Form.Label}" VerticalAlignment="Center" Margin="0" />
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource Button.Subtle}"
+                                        Content="+ Add New"
+                                        FontSize="11"
+                                        Padding="6,2"
+                                        Command="{Binding OpenQuickAddUnitCommand}" />
+                            </Grid>
                             <ComboBox ItemsSource="{Binding Units}"
                                       SelectedValue="{Binding FormUnitId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
-                                      Margin="0,0,0,14" />
+                                      common:ClearableHelper.IsClearable="True"
+                                      common:PlaceholderHelper.Placeholder="Select Unit..."
+                                      Margin="0,0,0,14"
+                                      Visibility="{Binding HasUnits, Converter={StaticResource BoolToVis}}" />
+                            <Border Background="{StaticResource Brush.Surface.Muted}"
+                                    BorderBrush="{StaticResource Brush.Border}"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="10,8"
+                                    Margin="0,0,0,14"
+                                    Visibility="{Binding HasUnits, Converter={StaticResource InverseBoolToVis}}">
+                                <Grid>
+                                    <TextBlock Text="No units exist yet." FontSize="12" Foreground="{StaticResource Brush.Text.Muted}" VerticalAlignment="Center" />
+                                    <Button Style="{StaticResource Button.Outline}"
+                                            Content="+ Create Unit"
+                                            FontSize="11"
+                                            Padding="8,3"
+                                            HorizontalAlignment="Right"
+                                            Command="{Binding OpenQuickAddUnitCommand}" />
+                                </Grid>
+                            </Border>
 
                             <!-- Pricing (Purchase & Sale) in 2 columns -->
-                            <Grid Margin="0,0,0,14">
+                            <Grid Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="12" />
@@ -410,21 +511,38 @@
 
                                 <StackPanel Grid.Column="0">
                                     <TextBlock Text="Purchase Price" Style="{StaticResource Form.Label}" />
-                                    <TextBox Text="{Binding FormDefaultPurchasePrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:F2}'}" />
+                                    <TextBox Text="{Binding FormDefaultPurchasePrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:F2}'}"
+                                             common:PlaceholderHelper.Placeholder="0.00" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Sale Price" Style="{StaticResource Form.Label}" />
-                                    <TextBox Text="{Binding FormDefaultSalePrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:F2}'}" />
+                                    <TextBox Text="{Binding FormDefaultSalePrice, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:F2}'}"
+                                             common:PlaceholderHelper.Placeholder="0.00" />
                                 </StackPanel>
                             </Grid>
 
-                            <!-- Reorder Level -->
-                            <TextBlock Text="Reorder Level (Alert Threshold)" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormReorderLevel, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16" />
-
-                            <!-- Active Status Checkbox -->
-                            <CheckBox IsChecked="{Binding FormIsActive}" Content="Product is active and available for billing" />
+                            <!-- Active Status Toggle Switch -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0">
+                                <ToggleButton IsChecked="{Binding FormIsActive, Mode=TwoWay}"
+                                              Style="{StaticResource Switch.Toggle}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,12,0" />
+                                <TextBlock VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Product is Active and available for billing" />
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FormIsActive}" Value="False">
+                                                    <Setter Property="Text" Value="Product is Inactive (Hidden from billing)" />
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
 
@@ -455,6 +573,89 @@
                                     Padding="16,8" />
                         </Grid>
                     </Border>
+
+                    <!-- IN-DRAWER QUICK-ADD MODAL OVERLAY -->
+                    <Grid Grid.RowSpan="3"
+                          Visibility="{Binding IsQuickAddOpen, Converter={StaticResource BoolToVis}}">
+                        <Border Background="#99000000" />
+                        <Border HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Width="380"
+                                Background="{StaticResource Brush.Surface}"
+                                BorderBrush="{StaticResource Brush.Border}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="20"
+                                SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Opacity="0.3" Direction="270" />
+                            </Border.Effect>
+                            <StackPanel>
+                                <Grid Margin="0,0,0,16">
+                                    <TextBlock Text="{Binding QuickAddTitle}"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="{StaticResource Brush.Text.Primary}"
+                                               VerticalAlignment="Center" />
+                                    <Button Style="{StaticResource Button.Subtle}"
+                                            Content="✕"
+                                            FontSize="14"
+                                            HorizontalAlignment="Right"
+                                            Command="{Binding CancelQuickAddCommand}" />
+                                </Grid>
+
+                                <!-- Quick-Add Error Notice -->
+                                <Border Background="{StaticResource Brush.Status.Error.Bg}"
+                                        BorderBrush="{StaticResource Brush.Status.Error}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8"
+                                        Margin="0,0,0,12"
+                                        Visibility="{Binding QuickAddErrorMessage, Converter={StaticResource NullToVis}}">
+                                    <TextBlock Text="{Binding QuickAddErrorMessage}"
+                                               Foreground="{StaticResource Brush.Status.Error}"
+                                               FontSize="12"
+                                               TextWrapping="Wrap" />
+                                </Border>
+
+                                <!-- Name Input -->
+                                <TextBlock Text="Name *" Style="{StaticResource Form.Label}" />
+                                <TextBox Text="{Binding QuickAddName, UpdateSourceTrigger=PropertyChanged}"
+                                         common:PlaceholderHelper.Placeholder="Enter name..."
+                                         Margin="0,0,0,14" />
+
+                                <!-- Abbreviation for Unit -->
+                                <StackPanel Visibility="{Binding IsUnitQuickAdd, Converter={StaticResource BoolToVis}}">
+                                    <TextBlock Text="Abbreviation (e.g. Tab, Cap) *" Style="{StaticResource Form.Label}" />
+                                    <TextBox Text="{Binding QuickAddAbbreviation, UpdateSourceTrigger=PropertyChanged}"
+                                             common:PlaceholderHelper.Placeholder="e.g. Tab"
+                                             Margin="0,0,0,14" />
+                                </StackPanel>
+
+                                <!-- Action Buttons -->
+                                <Grid Margin="0,6,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Grid.Column="1"
+                                            Style="{StaticResource Button.Outline}"
+                                            Content="Cancel"
+                                            Command="{Binding CancelQuickAddCommand}"
+                                            Padding="12,6"
+                                            Margin="0,0,8,0" />
+
+                                    <Button Grid.Column="2"
+                                            Style="{StaticResource Button.Primary}"
+                                            Content="Save &amp; Select"
+                                            Command="{Binding SaveQuickAddCommand}"
+                                            Padding="14,6" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

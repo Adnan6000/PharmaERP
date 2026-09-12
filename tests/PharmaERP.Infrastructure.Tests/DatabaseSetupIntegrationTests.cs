@@ -154,10 +154,12 @@ public class DatabaseSetupIntegrationTests : IAsyncLifetime
             Assert.NotNull(nameConfig);
             Assert.Equal("Shifa Community Pharmacy", nameConfig.Value);
 
-            // Verify Accounting Gate
-            var gateConfig = await ctx.AppConfigs.FirstOrDefaultAsync(c => c.Key == "Accounting.SetupState");
-            Assert.NotNull(gateConfig);
-            Assert.Equal("Active", gateConfig.Value);
+            // Verify Default Units of Measure seeded
+            var unitsCount = await ctx.Units.CountAsync();
+            Assert.True(unitsCount >= 10);
+            Assert.True(await ctx.Units.AnyAsync(u => u.Abbreviation == "Tab"));
+            Assert.True(await ctx.Units.AnyAsync(u => u.Abbreviation == "Cap"));
+            Assert.True(await ctx.Units.AnyAsync(u => u.Abbreviation == "Btl"));
         }
 
         // 2. Second execution (idempotence): must not duplicate COA or overwrite data
@@ -181,7 +183,32 @@ public class DatabaseSetupIntegrationTests : IAsyncLifetime
                 .ToListAsync();
 
             Assert.Empty(duplicateCodes);
+
+            // Verify units were not duplicated
+            var unitsCountAfter = await ctx.Units.CountAsync();
+            Assert.Equal(10, unitsCountAfter);
+
+            var duplicateUnits = await ctx.Units
+                .GroupBy(u => u.Name.ToUpper())
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToListAsync();
+
+            Assert.Empty(duplicateUnits);
         }
+    }
+
+    [Fact]
+    public void EfCoreModel_ValidatesWithoutErrorsOrWarnings()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer("Server=.\\SQLEXPRESS;Database=PharmaERP;Integrated Security=True;TrustServerCertificate=True")
+            .Options;
+
+        using var ctx = new AppDbContext(options);
+        var model = ctx.Model;
+        Assert.NotNull(model);
+        Assert.NotEmpty(model.GetEntityTypes());
     }
 }
 

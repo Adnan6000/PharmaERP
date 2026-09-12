@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:VouchersViewModel}">
 
@@ -296,19 +297,31 @@
                         <DatePicker SelectedDate="{Binding RvDate}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Customer *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding RvCustomerId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+                        <ComboBox ItemsSource="{Binding Customers}" SelectedValue="{Binding RvCustomerId}" SelectedValuePath="Id" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select customer..."
+                                  Margin="0,0,0,12" />
 
                         <TextBlock Text="Deposit Into (Cash / Bank) *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding RvCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding RvCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select cash/bank account..."
+                                  Margin="0,0,0,12" />
 
                         <TextBlock Text="Amount *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding RvAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding RvAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
+                                 Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Reference #" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding RvReference, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding RvReference, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. Cheque / Txn #"
+                                 Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Narration" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding RvNarration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20" />
+                        <TextBox Text="{Binding RvNarration, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Payment notes / narration..."
+                                 Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20" />
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Style="{StaticResource Button.Outline}" Content="Cancel" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,8" />
@@ -334,19 +347,31 @@
                         <DatePicker SelectedDate="{Binding PvDate}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Supplier (if Accounts Payable)" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <ComboBox ItemsSource="{Binding Suppliers}" SelectedValue="{Binding PvSupplierId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+                        <ComboBox ItemsSource="{Binding Suppliers}" SelectedValue="{Binding PvSupplierId}" SelectedValuePath="Id" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select supplier..."
+                                  Margin="0,0,0,12" />
 
                         <TextBlock Text="Paid From (Cash / Bank) *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding PvCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name" Margin="0,0,0,12" />
+                        <ComboBox ItemsSource="{Binding CashAndBankAccounts}" SelectedValue="{Binding PvCashBankAccountId}" SelectedValuePath="Id" DisplayMemberPath="Name"
+                                  common:ClearableHelper.IsClearable="True"
+                                  common:PlaceholderHelper.Placeholder="Select cash/bank account..."
+                                  Margin="0,0,0,12" />
 
                         <TextBlock Text="Amount *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding PvAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding PvAmount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
+                                 Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Reference #" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding PvReference, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
+                        <TextBox Text="{Binding PvReference, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. Cheque / Txn #"
+                                 Style="{StaticResource Form.Input}" Margin="0,0,0,12" />
 
                         <TextBlock Text="Narration" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding PvNarration, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20" />
+                        <TextBox Text="{Binding PvNarration, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Payment notes / narration..."
+                                 Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,20" />
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <Button Style="{StaticResource Button.Outline}" Content="Cancel" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,8" />
@@ -768,7 +793,9 @@
                     </Border>
 
                     <TextBlock Text="Reason for Cancellation *" Style="{StaticResource Form.Label}" Margin="0,0,0,4" />
-                    <TextBox Text="{Binding CancelReason, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,16" />
+                    <TextBox Text="{Binding CancelReason, UpdateSourceTrigger=PropertyChanged}"
+                             common:PlaceholderHelper.Placeholder="Reason for cancelling / voiding this voucher..."
+                             Style="{StaticResource Form.Input}" Height="60" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,16" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Style="{StaticResource Button.Outline}" Content="Close" Command="{Binding CloseDrawerCommand}" Margin="0,0,10,0" Padding="14,6" />

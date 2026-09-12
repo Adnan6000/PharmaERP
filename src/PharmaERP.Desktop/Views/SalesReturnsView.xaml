@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:SalesReturnsViewModel}">
 
@@ -59,6 +60,7 @@
                              Padding="8,5"
                              VerticalContentAlignment="Center"
                              KeyDown="InvoiceSearchBox_KeyDown"
+                             common:PlaceholderHelper.Placeholder="e.g. SINV-2026-000001"
                              Tag="e.g. SINV-2026-000001" />
 
                     <Button Grid.Column="2"
@@ -145,7 +147,8 @@
                                 <TextBox Width="260"
                                          Text="{Binding ReturnReason, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                          Padding="6,4"
-                                         VerticalAlignment="Center" />
+                                         VerticalAlignment="Center"
+                                         common:PlaceholderHelper.Placeholder="Optional reason for return..." />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,24,0">

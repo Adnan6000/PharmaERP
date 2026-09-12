@@ -5,10 +5,12 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class DashboardViewModel : ViewModelBase
+public class DashboardViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IDashboardService _dashboardService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
     private Action<string>? _navigateAction;
 
     private int _totalProducts;
@@ -29,10 +31,12 @@ public class DashboardViewModel : ViewModelBase
     public DashboardViewModel(
         IDashboardService dashboardService,
         ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null,
         Action<string>? navigateAction = null)
     {
         _dashboardService = dashboardService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
         _navigateAction = navigateAction;
 
         RefreshCommand = new AsyncRelayCommand(
@@ -49,6 +53,17 @@ public class DashboardViewModel : ViewModelBase
             });
 
         _connectionStore.ConnectionStateChanged += OnConnectionStateChanged;
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.SalePosted or UiDataChangeType.SaleReturned or UiDataChangeType.PurchasePosted or UiDataChangeType.PurchaseReturned or UiDataChangeType.ProductChanged or UiDataChangeType.StockChanged or UiDataChangeType.All)
+                {
+                    _ = LoadMetricsAsync(CancellationToken.None);
+                }
+            });
+        }
 
         _ = LoadMetricsAsync(CancellationToken.None);
     }
@@ -174,11 +189,22 @@ public class DashboardViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        await LoadMetricsAsync(ct);
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        await LoadMetricsAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
         }
 
         base.Dispose(disposing);

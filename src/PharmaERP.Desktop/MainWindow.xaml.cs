@@ -15,6 +15,7 @@ public partial class MainWindow : Window
         DataContext = viewModel;
         Loaded += (_, _) => Focus();
         PreviewKeyDown += MainWindow_PreviewKeyDown;
+        Closed += (_, _) => (DataContext as IDisposable)?.Dispose();
     }
 
     private void MainWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

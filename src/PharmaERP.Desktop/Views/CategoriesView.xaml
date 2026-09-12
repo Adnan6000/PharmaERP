@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:CategoriesViewModel}">
 
@@ -70,6 +71,7 @@
                     Margin="0,0,0,14">
                 <Grid Width="360" HorizontalAlignment="Left">
                     <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                             common:PlaceholderHelper.Placeholder="Search categories by name..."
                              Padding="28,6,8,6"
                              VerticalContentAlignment="Center" />
                     <TextBlock Text="🔍"
@@ -214,10 +216,13 @@
                             </Border>
 
                             <TextBlock Text="Category Name *" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. Antibiotics"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Description" Style="{StaticResource Form.Label}" />
                             <TextBox Text="{Binding FormDescription, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="Optional category description..."
                                      Height="80"
                                      TextWrapping="Wrap"
                                      AcceptsReturn="True"

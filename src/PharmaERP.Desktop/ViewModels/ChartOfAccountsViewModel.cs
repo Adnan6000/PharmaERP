@@ -8,10 +8,13 @@ using PharmaERP.Domain.Enums;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class ChartOfAccountsViewModel : ViewModelBase
+public class ChartOfAccountsViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IAccountService _accountService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<AccountDto> _allAccounts = [];
     private readonly ObservableCollection<AccountDto> _filteredAccounts = [];
@@ -34,10 +37,12 @@ public class ChartOfAccountsViewModel : ViewModelBase
 
     public ChartOfAccountsViewModel(
         IAccountService accountService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _accountService = accountService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Accounts = new ReadOnlyObservableCollection<AccountDto>(_filteredAccounts);
 
@@ -57,6 +62,17 @@ public class ChartOfAccountsViewModel : ViewModelBase
             canExecute: _ => !IsSaving && !string.IsNullOrWhiteSpace(FormAccountCode) && !string.IsNullOrWhiteSpace(FormAccountName));
 
         AccountTypes = Enum.GetValues<AccountType>();
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.AccountChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
     }
 
     public ReadOnlyObservableCollection<AccountDto> Accounts { get; }
@@ -252,6 +268,7 @@ public class ChartOfAccountsViewModel : ViewModelBase
 
             await _accountService.CreateAccountAsync(dto, ct);
             CloseDrawer();
+            _eventBus?.Publish(UiDataChangeType.AccountChanged);
             await LoadAccountsAsync(ct);
         }
         catch (Exception ex)
@@ -262,5 +279,30 @@ public class ChartOfAccountsViewModel : ViewModelBase
         {
             IsSaving = false;
         }
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadAccountsAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadAccountsAsync(ct);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }

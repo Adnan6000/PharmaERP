@@ -116,12 +116,15 @@ public class PurchaseEntryLineItem : ViewModelBase
     }
 }
 
-public class PurchaseEntryViewModel : ViewModelBase
+public class PurchaseEntryViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IPurchaseService _purchaseService;
     private readonly ISupplierService _supplierService;
     private readonly IProductService _productService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _lookupsDirty = true;
 
     private readonly ObservableCollection<LookupDto> _suppliers = [];
     private readonly ObservableCollection<LookupDto> _products = [];
@@ -159,12 +162,14 @@ public class PurchaseEntryViewModel : ViewModelBase
         IPurchaseService purchaseService,
         ISupplierService supplierService,
         IProductService productService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _purchaseService = purchaseService;
         _supplierService = supplierService;
         _productService = productService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Suppliers = new ReadOnlyObservableCollection<LookupDto>(_suppliers);
         Products = new ReadOnlyObservableCollection<LookupDto>(_products);
@@ -190,6 +195,17 @@ public class PurchaseEntryViewModel : ViewModelBase
 
         ClearFormCommand = new RelayCommand(
             execute: _ => ResetAll());
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.ProductChanged or UiDataChangeType.MasterChanged or UiDataChangeType.All)
+                {
+                    _lookupsDirty = true;
+                }
+            });
+        }
 
         _ = RefreshLookupsAsync(CancellationToken.None);
     }
@@ -362,7 +378,7 @@ public class PurchaseEntryViewModel : ViewModelBase
         try
         {
             var supps = await _supplierService.GetActiveLookupsAsync(ct);
-            var prods = await _productService.GetProductsPagedAsync(new PaginationQuery { PageNumber = 1, PageSize = 1000 }, null, ct);
+            var prods = await _productService.GetProductsPagedAsync(new PaginationQuery { PageNumber = 1, PageSize = 1000 }, null, cancellationToken: ct);
 
             void ApplyLookups()
             {
@@ -531,6 +547,8 @@ public class PurchaseEntryViewModel : ViewModelBase
             var invoice = await _purchaseService.CreateAndPostPurchaseInvoiceAsync(dto, ct);
             IsSuccess = true;
             StatusMessage = $"Purchase Invoice {invoice.InvoiceNumber} successfully posted! Total: {AppCurrency.Format(invoice.NetTotal)}";
+            _eventBus?.Publish(UiDataChangeType.PurchasePosted);
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
             ResetAll();
         }
         catch (DuplicateKeyException ex)
@@ -567,6 +585,31 @@ public class PurchaseEntryViewModel : ViewModelBase
         LineSuggestedSaleRate = null;
         LineDiscountAmount = 0.00m;
         LineEstimatedTotal = 0.00m;
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_lookupsDirty)
+        {
+            _lookupsDirty = false;
+            await RefreshLookupsAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _lookupsDirty = false;
+        await RefreshLookupsAsync(ct);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }
 

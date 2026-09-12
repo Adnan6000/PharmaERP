@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PharmaERP.Application;
 using PharmaERP.Application.Common.Interfaces;
 using PharmaERP.Application.Interfaces;
+using PharmaERP.Desktop.Common;
 using PharmaERP.Desktop.Services;
 using PharmaERP.Desktop.ViewModels;
 using PharmaERP.Desktop.Views;
@@ -143,6 +144,7 @@ public partial class App : System.Windows.Application
 
                 // Desktop Services & State Stores
                 services.AddSingleton<ConnectionStateStore>();
+                services.AddSingleton<IUiDataChangeBus, UiDataChangeBus>();
                 services.AddSingleton<WorkstationConfigService>();
                 services.AddSingleton<ICurrencyFormatter, CurrencyFormatter>();
                 services.AddSingleton<ILanguageService, LanguageService>();

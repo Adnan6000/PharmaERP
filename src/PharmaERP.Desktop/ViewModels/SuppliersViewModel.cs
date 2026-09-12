@@ -9,10 +9,13 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class SuppliersViewModel : ViewModelBase
+public class SuppliersViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly ISupplierService _supplierService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<SupplierDto> _items = [];
     private SupplierDto? _selectedItem;
@@ -48,16 +51,29 @@ public class SuppliersViewModel : ViewModelBase
 
     public SuppliersViewModel(
         ISupplierService supplierService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _supplierService = supplierService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Items = new ReadOnlyObservableCollection<SupplierDto>(_items);
 
         RefreshCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await LoadDataAsync(ct),
             canExecute: _ => !IsLoading && !IsSaving);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.SupplierChanged or UiDataChangeType.PurchasePosted or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         FirstPageCommand = new AsyncRelayCommand(
             execute: async (_, ct) => { PageNumber = 1; await LoadDataAsync(ct); },
@@ -411,6 +427,7 @@ public class SuppliersViewModel : ViewModelBase
             }
 
             CloseDrawer();
+            _eventBus?.Publish(UiDataChangeType.SupplierChanged);
             await LoadDataAsync(ct);
         }
         catch (DuplicateKeyException ex)
@@ -436,6 +453,7 @@ public class SuppliersViewModel : ViewModelBase
         try
         {
             await _supplierService.ToggleActiveAsync(supplier.Id, supplier.RowVersion, ct);
+            _eventBus?.Publish(UiDataChangeType.SupplierChanged);
             await LoadDataAsync(ct);
         }
         catch (Exception ex)
@@ -444,11 +462,27 @@ public class SuppliersViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadDataAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadDataAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

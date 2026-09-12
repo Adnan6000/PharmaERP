@@ -8,11 +8,14 @@ using PharmaERP.Domain.Enums;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class SalesViewModel : ViewModelBase
+public class SalesViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly ISaleService _saleService;
     private readonly IInvoicePrintDataProvider _printDataProvider;
     private readonly ILogger<SalesViewModel> _logger;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private DateOnly? _fromDate;
     private DateOnly? _toDate;
@@ -29,11 +32,13 @@ public class SalesViewModel : ViewModelBase
     public SalesViewModel(
         ISaleService saleService,
         IInvoicePrintDataProvider printDataProvider,
-        ILogger<SalesViewModel> logger)
+        ILogger<SalesViewModel> logger,
+        IUiDataChangeBus? eventBus = null)
     {
         _saleService = saleService;
         _printDataProvider = printDataProvider;
         _logger = logger;
+        _eventBus = eventBus;
 
         // Default to today
         _fromDate = DateOnly.FromDateTime(DateTime.UtcNow);
@@ -46,6 +51,17 @@ public class SalesViewModel : ViewModelBase
         FilterAllTimeCommand = new RelayCommand(_ => ClearDateFilter());
         ReprintCommand = new AsyncRelayCommand(ReprintAsync, () => SelectedInvoice != null);
         CancelInvoiceCommand = new AsyncRelayCommand(CancelInvoiceAsync, () => SelectedInvoice != null && SelectedInvoice.Status == SaleInvoiceStatus.Posted);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.SalePosted or UiDataChangeType.SaleReturned or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         _ = LoadInvoicesAsync();
     }
@@ -241,6 +257,31 @@ public class SalesViewModel : ViewModelBase
         FromDate = null;
         ToDate = null;
         _ = LoadInvoicesAsync();
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadInvoicesAsync();
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadInvoicesAsync();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }
 

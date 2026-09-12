@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:ManufacturersViewModel}">
 
@@ -70,6 +71,7 @@
                     Margin="0,0,0,14">
                 <Grid Width="360" HorizontalAlignment="Left">
                     <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                             common:PlaceholderHelper.Placeholder="Search manufacturers by name..."
                              Padding="28,6,8,6"
                              VerticalContentAlignment="Center" />
                     <TextBlock Text="🔍"
@@ -102,8 +104,9 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTextColumn Header="Email" Binding="{Binding ContactEmail}" Width="220" />
-                            <DataGridTextColumn Header="Phone" Binding="{Binding ContactPhone}" Width="160" />
+                            <DataGridTextColumn Header="Contact Person" Binding="{Binding ContactPerson}" Width="150" />
+                            <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="220" />
+                            <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="160" />
 
                             <DataGridTemplateColumn Header="Status" Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -215,15 +218,45 @@
                             </Border>
 
                             <TextBlock Text="Manufacturer / Company Name *" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormName, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. GlaxoSmithKline"
+                                     Margin="0,0,0,14" />
+
+                            <TextBlock Text="Contact Person" Style="{StaticResource Form.Label}" />
+                            <TextBox Text="{Binding FormContactPerson, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. Ali Khan"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Contact Email" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormContactEmail, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,14" />
+                            <TextBox Text="{Binding FormEmail, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. info@company.com"
+                                     Margin="0,0,0,14" />
 
                             <TextBlock Text="Contact Phone" Style="{StaticResource Form.Label}" />
-                            <TextBox Text="{Binding FormContactPhone, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,16" />
+                            <TextBox Text="{Binding FormPhone, UpdateSourceTrigger=PropertyChanged}"
+                                     common:PlaceholderHelper.Placeholder="e.g. +92 300 1234567"
+                                     Margin="0,0,0,16" />
 
-                            <CheckBox IsChecked="{Binding FormIsActive}" Content="Manufacturer is active" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,4,0,0">
+                                <ToggleButton IsChecked="{Binding FormIsActive, Mode=TwoWay}"
+                                              Style="{StaticResource Switch.Toggle}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0" />
+                                <TextBlock VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Manufacturer is Active" />
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Text.Primary}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding FormIsActive}" Value="False">
+                                                    <Setter Property="Text" Value="Manufacturer is Inactive" />
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Text.Muted}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
 

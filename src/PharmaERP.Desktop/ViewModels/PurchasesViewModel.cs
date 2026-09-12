@@ -9,11 +9,14 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class PurchasesViewModel : ViewModelBase
+public class PurchasesViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IPurchaseService _purchaseService;
     private readonly ISupplierService _supplierService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<PurchaseInvoiceListDto> _invoices = [];
     private readonly ObservableCollection<LookupDto> _suppliers = [];
@@ -49,11 +52,13 @@ public class PurchasesViewModel : ViewModelBase
     public PurchasesViewModel(
         IPurchaseService purchaseService,
         ISupplierService supplierService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _purchaseService = purchaseService;
         _supplierService = supplierService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Invoices = new ReadOnlyObservableCollection<PurchaseInvoiceListDto>(_invoices);
         Suppliers = new ReadOnlyObservableCollection<LookupDto>(_suppliers);
@@ -121,6 +126,18 @@ public class PurchasesViewModel : ViewModelBase
             });
 
         _connectionStore.ConnectionStateChanged += OnConnectionStateChanged;
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.PurchasePosted or UiDataChangeType.PurchaseReturned or UiDataChangeType.StockChanged or UiDataChangeType.SupplierChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
+
         _ = RefreshAllAsync(CancellationToken.None);
     }
 
@@ -412,6 +429,8 @@ public class PurchasesViewModel : ViewModelBase
         try
         {
             await _purchaseService.CancelPurchaseInvoiceAsync(SelectedInvoice.Id, CancelReason, ct);
+            _eventBus?.Publish(UiDataChangeType.PurchaseCancelled);
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
             IsCancelDrawerOpen = false;
             await LoadDataAsync(ct);
         }
@@ -425,11 +444,27 @@ public class PurchasesViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await RefreshAllAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await RefreshAllAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

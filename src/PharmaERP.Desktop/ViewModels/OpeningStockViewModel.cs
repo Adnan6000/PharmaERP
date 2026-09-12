@@ -8,11 +8,14 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class OpeningStockViewModel : ViewModelBase
+public class OpeningStockViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IInventoryService _inventoryService;
     private readonly IProductService _productService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<LookupDto> _products = [];
     private LookupDto? _selectedProduct;
@@ -33,11 +36,13 @@ public class OpeningStockViewModel : ViewModelBase
     public OpeningStockViewModel(
         IInventoryService inventoryService,
         IProductService productService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _inventoryService = inventoryService;
         _productService = productService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Products = new ReadOnlyObservableCollection<LookupDto>(_products);
 
@@ -47,6 +52,17 @@ public class OpeningStockViewModel : ViewModelBase
 
         ResetCommand = new RelayCommand(
             execute: _ => ResetForm());
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.ProductChanged or UiDataChangeType.MasterChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         _ = LoadProductsAsync(CancellationToken.None);
     }
@@ -147,7 +163,7 @@ public class OpeningStockViewModel : ViewModelBase
 
         try
         {
-            var paged = await _productService.GetProductsPagedAsync(new PaginationQuery { PageNumber = 1, PageSize = 1000 }, null, ct);
+            var paged = await _productService.GetProductsPagedAsync(new PaginationQuery { PageNumber = 1, PageSize = 1000 }, null, cancellationToken: ct);
             _products.Clear();
             foreach (var p in paged.Items.Where(x => x.IsActive))
             {
@@ -241,6 +257,7 @@ public class OpeningStockViewModel : ViewModelBase
             var result = await _inventoryService.RecordOpeningStockAsync(dto, ct);
             IsSuccess = true;
             StatusMessage = $"Opening stock recorded successfully for batch '{result.BatchNumber}'. Current balance: {result.QuantityOnHand}.";
+            _eventBus?.Publish(UiDataChangeType.StockChanged);
             ResetForm();
         }
         catch (Exception ex)
@@ -263,6 +280,31 @@ public class OpeningStockViewModel : ViewModelBase
         UnitCost = 0.00m;
         SuggestedSalePrice = null;
         TotalValuation = 0.00m;
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadProductsAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadProductsAsync(ct);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }
 

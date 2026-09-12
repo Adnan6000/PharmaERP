@@ -24,6 +24,8 @@ public class ProductRepository : IProductRepository
     public async Task<PagedResult<ProductDto>> GetPagedAsync(
         PaginationQuery query,
         string? searchTerm = null,
+        int? categoryId = null,
+        int? manufacturerId = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -40,6 +42,16 @@ public class ProductRepository : IProductRepository
                 (p.GenericName != null && p.GenericName.Contains(term)) ||
                 (p.ProductCode != null && p.ProductCode.Contains(term)) ||
                 (p.Barcode != null && p.Barcode.Contains(term)));
+        }
+
+        if (categoryId.HasValue)
+        {
+            queryable = queryable.Where(p => p.CategoryId == categoryId.Value);
+        }
+
+        if (manufacturerId.HasValue)
+        {
+            queryable = queryable.Where(p => p.ManufacturerId == manufacturerId.Value);
         }
 
         var totalCount = await queryable.CountAsync(cancellationToken);

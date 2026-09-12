@@ -9,6 +9,8 @@ public interface IProductRepository
     Task<PagedResult<ProductDto>> GetPagedAsync(
         PaginationQuery query,
         string? searchTerm = null,
+        int? categoryId = null,
+        int? manufacturerId = null,
         CancellationToken cancellationToken = default);
 
     Task<Product?> GetByIdAsync(int id, CancellationToken cancellationToken = default);

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -17,6 +17,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PharmaERP.Application\PharmaERP.Application.csproj" />
     <ProjectReference Include="..\..\src\PharmaERP.Domain\PharmaERP.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\src\PharmaERP.Desktop\Common\IUiDataChangeBus.cs" Link="Linked\IUiDataChangeBus.cs" />
+    <Compile Include="..\..\src\PharmaERP.Desktop\Common\UiDataChangeBus.cs" Link="Linked\UiDataChangeBus.cs" />
+    <Compile Include="..\..\src\PharmaERP.Desktop\Common\ViewModelBase.cs" Link="Linked\ViewModelBase.cs" />
   </ItemGroup>
 
   <ItemGroup>

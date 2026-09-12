@@ -21,12 +21,22 @@ public class ProductServiceTests
         public Task<PagedResult<ProductDto>> GetPagedAsync(
             PaginationQuery query,
             string? searchTerm = null,
+            int? categoryId = null,
+            int? manufacturerId = null,
             CancellationToken cancellationToken = default)
         {
             var filtered = Products.AsEnumerable();
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 filtered = filtered.Where(p => p.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+            }
+            if (categoryId.HasValue)
+            {
+                filtered = filtered.Where(p => p.CategoryId == categoryId.Value);
+            }
+            if (manufacturerId.HasValue)
+            {
+                filtered = filtered.Where(p => p.ManufacturerId == manufacturerId.Value);
             }
 
             var total = filtered.Count();

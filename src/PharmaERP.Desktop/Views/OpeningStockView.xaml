@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:OpeningStockViewModel}">
 
@@ -48,6 +49,8 @@
                 <ComboBox ItemsSource="{Binding Products}"
                           SelectedItem="{Binding SelectedProduct}"
                           DisplayMemberPath="Name"
+                          common:ClearableHelper.IsClearable="True"
+                          common:PlaceholderHelper.Placeholder="Choose a product..."
                           Margin="0,0,0,16"
                           Height="36"
                           VerticalContentAlignment="Center" />
@@ -62,7 +65,9 @@
 
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="Batch Number *" FontWeight="SemiBold" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}" Height="34" VerticalContentAlignment="Center" />
+                        <TextBox Text="{Binding BatchNumber, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="e.g. BATCH-2026-A"
+                                 Height="34" VerticalContentAlignment="Center" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
@@ -81,12 +86,16 @@
 
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="Quantity On Hand *" FontWeight="SemiBold" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}" Height="34" VerticalContentAlignment="Center" />
+                        <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
+                                 Height="34" VerticalContentAlignment="Center" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="Unit Purchase Cost *" FontWeight="SemiBold" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding UnitCost, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}" Height="34" VerticalContentAlignment="Center" />
+                        <TextBox Text="{Binding UnitCost, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
+                                 Height="34" VerticalContentAlignment="Center" />
                     </StackPanel>
                 </Grid>
 
@@ -100,7 +109,9 @@
 
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="Suggested Retail Price (Optional)" FontWeight="SemiBold" Margin="0,0,0,4" />
-                        <TextBox Text="{Binding SuggestedSalePrice, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}" Height="34" VerticalContentAlignment="Center" />
+                        <TextBox Text="{Binding SuggestedSalePrice, UpdateSourceTrigger=PropertyChanged, StringFormat={}{0:N2}}"
+                                 common:PlaceholderHelper.Placeholder="0.00"
+                                 Height="34" VerticalContentAlignment="Center" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">

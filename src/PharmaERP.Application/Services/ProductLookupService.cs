@@ -125,7 +125,7 @@ public class ProductLookupService : IProductLookupService
                 TotalPhysicalQuantity = 0,
                 TotalSaleableQuantity = 0,
                 DefaultSalePrice = product.DefaultSalePrice,
-                Message = $"Product '{product.Name}' ({product.ProductCode}) is out of stock (0 units on hand)."
+                Message = $"Product '{product.Name}' exists but is currently out of stock. Add stock through Purchase Entry before selling."
             };
         }
 

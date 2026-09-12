@@ -9,7 +9,7 @@ using PharmaERP.Domain.Enums;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class LedgersViewModel : ViewModelBase
+public class LedgersViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IJournalService _journalService;
     private readonly IPartyLedgerService _partyLedgerService;
@@ -17,6 +17,9 @@ public class LedgersViewModel : ViewModelBase
     private readonly ICustomerService _customerService;
     private readonly ISupplierService _supplierService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private string _activeTab = "GeneralLedger"; // GeneralLedger, CustomerLedger, SupplierLedger, DayBook, TrialBalance, CashBook, BankBook, ProfitLoss, BalanceSheet
     private DateTime _fromDate = DateTime.Today.AddDays(-30);
@@ -83,7 +86,8 @@ public class LedgersViewModel : ViewModelBase
         IAccountService accountService,
         ICustomerService customerService,
         ISupplierService supplierService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _journalService = journalService;
         _partyLedgerService = partyLedgerService;
@@ -91,6 +95,7 @@ public class LedgersViewModel : ViewModelBase
         _customerService = customerService;
         _supplierService = supplierService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Accounts = new ReadOnlyObservableCollection<AccountDto>(_accounts);
         CashAccounts = new ReadOnlyObservableCollection<AccountDto>(_cashAccounts);
@@ -134,6 +139,17 @@ public class LedgersViewModel : ViewModelBase
         SupFirstPageCommand = new AsyncRelayCommand(async (_, ct) => { _supPage = 1; await LoadSupplierLedgerAsync(ct); }, _ => _supPage > 1 && !IsLoading);
         SupPreviousPageCommand = new AsyncRelayCommand(async (_, ct) => { if (_supPage > 1) { _supPage--; await LoadSupplierLedgerAsync(ct); } }, _ => _supPage > 1 && !IsLoading);
         SupNextPageCommand = new AsyncRelayCommand(async (_, ct) => { if (HasMoreSupPages) { _supPage++; await LoadSupplierLedgerAsync(ct); } }, _ => HasMoreSupPages && !IsLoading);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.VoucherPosted or UiDataChangeType.SalePosted or UiDataChangeType.PurchasePosted or UiDataChangeType.AccountChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
     }
 
     public ReadOnlyObservableCollection<AccountDto> Accounts { get; }
@@ -543,5 +559,30 @@ public class LedgersViewModel : ViewModelBase
         {
             IsLoading = false;
         }
+    }
+
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await InitializeAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await InitializeAsync(ct);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _busSubscription?.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 }

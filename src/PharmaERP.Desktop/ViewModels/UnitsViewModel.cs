@@ -8,10 +8,13 @@ using PharmaERP.Desktop.Services;
 
 namespace PharmaERP.Desktop.ViewModels;
 
-public class UnitsViewModel : ViewModelBase
+public class UnitsViewModel : ViewModelBase, IAsyncNavigable, IRefreshableViewModel
 {
     private readonly IUnitService _unitService;
     private readonly ConnectionStateStore _connectionStore;
+    private readonly IUiDataChangeBus? _eventBus;
+    private readonly IDisposable? _busSubscription;
+    private bool _isDirty = true;
 
     private readonly ObservableCollection<UnitDto> _items = [];
     private UnitDto? _selectedItem;
@@ -36,16 +39,29 @@ public class UnitsViewModel : ViewModelBase
 
     public UnitsViewModel(
         IUnitService unitService,
-        ConnectionStateStore connectionStore)
+        ConnectionStateStore connectionStore,
+        IUiDataChangeBus? eventBus = null)
     {
         _unitService = unitService;
         _connectionStore = connectionStore;
+        _eventBus = eventBus;
 
         Items = new ReadOnlyObservableCollection<UnitDto>(_items);
 
         RefreshCommand = new AsyncRelayCommand(
             execute: async (_, ct) => await LoadDataAsync(ct),
             canExecute: _ => !IsLoading && !IsSaving);
+
+        if (_eventBus != null)
+        {
+            _busSubscription = _eventBus.Subscribe(changeType =>
+            {
+                if (changeType is UiDataChangeType.MasterChanged or UiDataChangeType.ProductChanged or UiDataChangeType.All)
+                {
+                    _isDirty = true;
+                }
+            });
+        }
 
         NewCommand = new RelayCommand(
             execute: _ => OpenNewDrawer(),
@@ -289,6 +305,8 @@ public class UnitsViewModel : ViewModelBase
             }
 
             CloseDrawer();
+            _eventBus?.Publish(UiDataChangeType.UnitChanged);
+            _eventBus?.Publish(UiDataChangeType.MasterChanged);
             await LoadDataAsync(ct);
         }
         catch (DuplicateKeyException ex)
@@ -314,6 +332,8 @@ public class UnitsViewModel : ViewModelBase
         try
         {
             await _unitService.ToggleActiveAsync(item.Id, item.RowVersion, ct);
+            _eventBus?.Publish(UiDataChangeType.UnitChanged);
+            _eventBus?.Publish(UiDataChangeType.MasterChanged);
             await LoadDataAsync(ct);
         }
         catch (Exception ex)
@@ -322,11 +342,27 @@ public class UnitsViewModel : ViewModelBase
         }
     }
 
+    public async Task OnNavigatedToAsync(CancellationToken ct = default)
+    {
+        if (_isDirty)
+        {
+            _isDirty = false;
+            await LoadDataAsync(ct);
+        }
+    }
+
+    public async Task RefreshAsync(CancellationToken ct = default)
+    {
+        _isDirty = false;
+        await LoadDataAsync(ct);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             _connectionStore.ConnectionStateChanged -= OnConnectionStateChanged;
+            _busSubscription?.Dispose();
             _searchDebounceCts?.Dispose();
         }
 

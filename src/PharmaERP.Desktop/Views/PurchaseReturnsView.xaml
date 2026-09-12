@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:PharmaERP.Desktop.ViewModels"
              xmlns:conv="clr-namespace:PharmaERP.Desktop.Converters"
+             xmlns:common="clr-namespace:PharmaERP.Desktop.Common"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=vm:PurchaseReturnsViewModel}">
 
@@ -83,6 +84,7 @@
 
                     <Grid Grid.Column="0" Margin="0,0,10,0">
                         <TextBox Text="{Binding SearchTerm, UpdateSourceTrigger=PropertyChanged}"
+                                 common:PlaceholderHelper.Placeholder="Search return #, supplier bill..."
                                  Padding="28,6,8,6"
                                  VerticalContentAlignment="Center" />
                         <TextBlock Text="🔍"
@@ -96,6 +98,8 @@
                               ItemsSource="{Binding Suppliers}"
                               SelectedItem="{Binding SelectedSupplierFilter}"
                               DisplayMemberPath="Name"
+                              common:ClearableHelper.IsClearable="True"
+                              common:PlaceholderHelper.Placeholder="Filter by supplier..."
                               VerticalContentAlignment="Center" />
                 </Grid>
             </Border>
@@ -243,6 +247,7 @@
                                       DisplayMemberPath="Name"
                                       Height="32"
                                       Margin="0,0,0,14"
+                                      common:PlaceholderHelper.Placeholder="Select supplier..."
                                       VerticalContentAlignment="Center" />
 
                             <!-- Original Invoice Selection -->
@@ -252,6 +257,8 @@
                                       DisplayMemberPath="InvoiceNumber"
                                       Height="32"
                                       Margin="0,0,0,14"
+                                      common:ClearableHelper.IsClearable="True"
+                                      common:PlaceholderHelper.Placeholder="Select invoice (optional)..."
                                       VerticalContentAlignment="Center" />
 
                             <!-- Reason -->
@@ -259,6 +266,7 @@
                             <TextBox Text="{Binding FormReason, UpdateSourceTrigger=PropertyChanged}"
                                      Height="32"
                                      Margin="0,0,0,14"
+                                     common:PlaceholderHelper.Placeholder="Enter reason for return..."
                                      VerticalContentAlignment="Center" />
 
                             <!-- Return Items Grid -->
