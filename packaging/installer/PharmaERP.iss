@@ -1,15 +1,15 @@
-﻿; PharmaERP Windows Installer Script (Inno Setup 6)
+; PharmaERP Windows Installer Script (Inno Setup 6)
 ; Product: PharmaERP
-; Version: 0.5.0-rc1
+; Version: 0.5.0-rc2
 ; Architecture: Windows x64 (Self-Contained .NET 10 WPF Application)
 
 #define MyAppName "PharmaERP"
-#define MyAppVersion "0.5.0-rc1"
+#define MyAppVersion "0.5.0-rc2"
 #define MyAppPublisher "PharmaERP Team"
 #define MyAppExeName "PharmaERP.Desktop.exe"
 #define MySourceDir "..\..\artifacts\publish\win-x64"
 #define MyOutputDir "..\..\artifacts\installer"
-#define MyOutputBaseFilename "PharmaERP-Setup-0.5.0-rc1"
+#define MyOutputBaseFilename "PharmaERP-Setup-0.5.0-rc2"
 
 [Setup]
 AppId={{8B84B48A-9A2E-4F3D-9457-3B21E885BFA2}
